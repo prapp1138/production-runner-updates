@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Production Runner Updates</title>
+    <link>https://github.com/prapp1138/production-runner-updates</link>
+    <description>Updates for Production Runner</description>
+    <language>en</language>
+  </channel>
+</rss>
