@@ -1,0 +1,842 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23788.4" systemVersion="24G325" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="BreakdownEntity" representedClassName="BreakdownEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="animals" optional="YES" attributeType="String"/>
+        <attribute name="art" optional="YES" attributeType="String"/>
+        <attribute name="castIDs" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="customCategories" optional="YES" attributeType="String"/>
+        <attribute name="extras" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="makeup" optional="YES" attributeType="String"/>
+        <attribute name="props" optional="YES" attributeType="String"/>
+        <attribute name="soundfx" optional="YES" attributeType="String"/>
+        <attribute name="specialEquipment" optional="YES" attributeType="String"/>
+        <attribute name="spfx" optional="YES" attributeType="String"/>
+        <attribute name="stunts" optional="YES" attributeType="String"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="vehicles" optional="YES" attributeType="String"/>
+        <attribute name="visualEffects" optional="YES" attributeType="String"/>
+        <attribute name="wardrobe" optional="YES" attributeType="String"/>
+        <relationship name="scene" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="SceneEntity" inverseName="breakdown" inverseEntity="SceneEntity"/>
+    </entity>
+    <entity name="BudgetEntity" representedClassName="BudgetEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="createdDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="modifiedDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="totalAmount" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="version" attributeType="String"/>
+        <relationship name="lineItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="BudgetLineItemEntity" inverseName="budget" inverseEntity="BudgetLineItemEntity"/>
+    </entity>
+    <entity name="BudgetLineItemEntity" representedClassName="BudgetLineItemEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="account" optional="YES" attributeType="String"/>
+        <attribute name="category" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="days" attributeType="Double" defaultValueString="1.0" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isLinkedToRateCard" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="order" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="quantity" attributeType="Double" defaultValueString="1.0" usesScalarValueType="YES"/>
+        <attribute name="rateCardID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="section" optional="YES" attributeType="String"/>
+        <attribute name="subcategory" optional="YES" attributeType="String"/>
+        <attribute name="unitCost" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="budget" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="BudgetEntity" inverseName="lineItems" inverseEntity="BudgetEntity"/>
+    </entity>
+    <entity name="BudgetTransactionEntity" representedClassName="BudgetTransactionEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="amount" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="category" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="descriptionText" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lineItemID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="payee" optional="YES" attributeType="String"/>
+        <attribute name="transactionType" attributeType="String"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="vendorID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <relationship name="budgetVersion" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="BudgetVersionEntity" inverseName="transactions" inverseEntity="BudgetVersionEntity"/>
+    </entity>
+    <entity name="BudgetVersionEntity" representedClassName="BudgetVersionEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="createdDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="currency" optional="YES" attributeType="String" defaultValueString="USD"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isLocked" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lineItemsJSON" optional="YES" attributeType="String"/>
+        <attribute name="lockedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lockedBy" optional="YES" attributeType="String"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="payrollItemsJSON" optional="YES" attributeType="String"/>
+        <attribute name="transactionsJSON" optional="YES" attributeType="String"/>
+        <relationship name="project" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectEntity" inverseName="budgetVersions" inverseEntity="ProjectEntity"/>
+        <relationship name="transactions" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="BudgetTransactionEntity" inverseName="budgetVersion" inverseEntity="BudgetTransactionEntity"/>
+        <fetchIndex name="byCreatedDate">
+            <fetchIndexElement property="createdDate" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byID">
+            <fetchIndexElement property="id" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="CalendarEntity" representedClassName="CalendarEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="ekEventIdentifier" optional="YES" attributeType="String"/>
+        <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="eventType" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isAllDay" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isSyncedToCalendar" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="locationName" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="relatedContactIDs" optional="YES" attributeType="String"/>
+        <attribute name="relatedSceneIDs" optional="YES" attributeType="String"/>
+        <attribute name="reminderMinutes" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="startDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="title" attributeType="String"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="project" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectEntity" inverseName="calendarEvents" inverseEntity="ProjectEntity"/>
+    </entity>
+    <entity name="CallSheetEntity" representedClassName="CallSheetEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="advanceSchedule" optional="YES" attributeType="String"/>
+        <attribute name="assistantDirector" optional="YES" attributeType="String"/>
+        <attribute name="basecamp" optional="YES" attributeType="String"/>
+        <attribute name="breakfast" optional="YES" attributeType="String"/>
+        <attribute name="castMembersJSON" optional="YES" attributeType="String"/>
+        <attribute name="createdDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="crewCall" optional="YES" attributeType="String"/>
+        <attribute name="crewMembersJSON" optional="YES" attributeType="String"/>
+        <attribute name="crewParking" optional="YES" attributeType="String"/>
+        <attribute name="dayNumber" attributeType="Integer 32" defaultValueString="1" usesScalarValueType="YES"/>
+        <attribute name="deliveryHistoryJSON" optional="YES" attributeType="String"/>
+        <attribute name="director" optional="YES" attributeType="String"/>
+        <attribute name="dop" optional="YES" attributeType="String"/>
+        <attribute name="estimatedWrap" optional="YES" attributeType="String"/>
+        <attribute name="generalCall" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lastModified" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastSentDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="locationAddress" optional="YES" attributeType="String"/>
+        <attribute name="locationNotes" optional="YES" attributeType="String"/>
+        <attribute name="locationParking" optional="YES" attributeType="String"/>
+        <attribute name="lunch" optional="YES" attributeType="String"/>
+        <attribute name="nearestHospital" optional="YES" attributeType="String"/>
+        <attribute name="producer" optional="YES" attributeType="String"/>
+        <attribute name="productionCompany" optional="YES" attributeType="String"/>
+        <attribute name="productionCompanyImageData" optional="YES" attributeType="Binary"/>
+        <attribute name="productionManager" optional="YES" attributeType="String"/>
+        <attribute name="productionNotes" optional="YES" attributeType="String"/>
+        <attribute name="safetyNotes" optional="YES" attributeType="String"/>
+        <attribute name="scheduleItemsJSON" optional="YES" attributeType="String"/>
+        <attribute name="sectionOrder" optional="YES" attributeType="String"/>
+        <attribute name="shootDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="shootingCall" optional="YES" attributeType="String"/>
+        <attribute name="shootingLocation" optional="YES" attributeType="String"/>
+        <attribute name="status" attributeType="String"/>
+        <attribute name="sunrise" optional="YES" attributeType="String"/>
+        <attribute name="sunset" optional="YES" attributeType="String"/>
+        <attribute name="title" attributeType="String"/>
+        <attribute name="totalDays" attributeType="Integer 32" defaultValueString="1" usesScalarValueType="YES"/>
+        <attribute name="walkaway" optional="YES" attributeType="String"/>
+        <attribute name="weatherConditions" optional="YES" attributeType="String"/>
+        <attribute name="weatherHigh" optional="YES" attributeType="String"/>
+        <attribute name="weatherLow" optional="YES" attributeType="String"/>
+        <relationship name="project" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectEntity" inverseName="callSheets" inverseEntity="ProjectEntity"/>
+    </entity>
+    <entity name="CastingActorEntity" representedClassName="CastingActorEntity" syncable="YES">
+        <attribute name="agentEmail" optional="YES" attributeType="String"/>
+        <attribute name="agentName" optional="YES" attributeType="String"/>
+        <attribute name="agentPhone" optional="YES" attributeType="String"/>
+        <attribute name="availabilityEnd" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="availabilityStart" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="characterID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="email" optional="YES" attributeType="String"/>
+        <attribute name="headshotData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="headshotURL" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="imdbID" optional="YES" attributeType="String"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="phone" optional="YES" attributeType="String"/>
+        <attribute name="rankNumber" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="role" optional="YES" attributeType="String"/>
+        <attribute name="section" optional="YES" attributeType="String" defaultValueString="Top Picks"/>
+        <attribute name="tags" optional="YES" attributeType="String"/>
+        <attribute name="websiteURL" optional="YES" attributeType="String"/>
+        <fetchIndex name="byName">
+            <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byCreatedAt">
+            <fetchIndexElement property="createdAt" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="bySection">
+            <fetchIndexElement property="section" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="ContactEntity" representedClassName="ContactEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="allergies" optional="YES" attributeType="String"/>
+        <attribute name="availabilityEnd" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="availabilityStart" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="category" optional="YES" attributeType="String"/>
+        <attribute name="contractStatus" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="department" optional="YES" attributeType="String"/>
+        <attribute name="email" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isFavorite" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isLinkedToRateCard" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastContactedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastViewedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="modifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="note" optional="YES" attributeType="String"/>
+        <attribute name="paperworkComplete" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="paperworkStarted" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="phone" optional="YES" attributeType="String"/>
+        <attribute name="photoData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="ratePerDay" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="rateUnit" optional="YES" attributeType="String"/>
+        <attribute name="role" optional="YES" attributeType="String"/>
+        <attribute name="sortOrder" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="tags" optional="YES" attributeType="String"/>
+        <attribute name="thumbnailData" optional="YES" attributeType="Binary"/>
+        <relationship name="history" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ContactHistoryEntity" inverseName="contact" inverseEntity="ContactHistoryEntity"/>
+        <relationship name="notes" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ContactNoteEntity" inverseName="contact" inverseEntity="ContactNoteEntity"/>
+        <relationship name="paperwork" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="PaperworkEntity" inverseName="contact" inverseEntity="PaperworkEntity"/>
+        <fetchIndex name="byName">
+            <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byCategory">
+            <fetchIndexElement property="category" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byEmail">
+            <fetchIndexElement property="email" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="bySortOrder">
+            <fetchIndexElement property="sortOrder" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byIsFavorite">
+            <fetchIndexElement property="isFavorite" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byLastViewedAt">
+            <fetchIndexElement property="lastViewedAt" type="Binary" order="descending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="ContactHistoryEntity" representedClassName="ContactHistoryEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="changedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="changedBy" optional="YES" attributeType="String"/>
+        <attribute name="contactID" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="fieldName" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="newValue" optional="YES" attributeType="String"/>
+        <attribute name="previousValue" optional="YES" attributeType="String"/>
+        <relationship name="contact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ContactEntity" inverseName="history" inverseEntity="ContactEntity"/>
+        <fetchIndex name="byContactID">
+            <fetchIndexElement property="contactID" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byChangedAt">
+            <fetchIndexElement property="changedAt" type="Binary" order="descending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="ContactNoteEntity" representedClassName="ContactNoteEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="authorName" optional="YES" attributeType="String"/>
+        <attribute name="contactID" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="content" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isPinned" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="noteType" optional="YES" attributeType="String"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="contact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ContactEntity" inverseName="notes" inverseEntity="ContactEntity"/>
+        <fetchIndex name="byContactID">
+            <fetchIndexElement property="contactID" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byCreatedAt">
+            <fetchIndexElement property="createdAt" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byIsPinned">
+            <fetchIndexElement property="isPinned" type="Binary" order="descending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="ContactTagEntity" representedClassName="ContactTagEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="colorHex" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="sortOrder" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <fetchIndex name="byName">
+            <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="bySortOrder">
+            <fetchIndexElement property="sortOrder" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="ContactTemplateEntity" representedClassName="ContactTemplateEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="category" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="department" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="ratePerDay" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="rateUnit" optional="YES" attributeType="String"/>
+        <attribute name="role" optional="YES" attributeType="String"/>
+        <attribute name="sortOrder" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <fetchIndex name="byName">
+            <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="bySortOrder">
+            <fetchIndexElement property="sortOrder" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="CreateBlockEntity" representedClassName="CreateBlockEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="blockType" attributeType="String" defaultValueString="note"/>
+        <attribute name="colorHex" optional="YES" attributeType="String"/>
+        <attribute name="contentJSON" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="height" attributeType="Double" defaultValueString="150.0" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isLocked" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="positionX" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="positionY" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="rotation" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="width" attributeType="Double" defaultValueString="200.0" usesScalarValueType="YES"/>
+        <attribute name="zIndex" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="board" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CreateBoardEntity" inverseName="blocks" inverseEntity="CreateBoardEntity"/>
+        <relationship name="incomingConnectors" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CreateConnectorEntity" inverseName="targetBlock" inverseEntity="CreateConnectorEntity"/>
+        <relationship name="outgoingConnectors" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CreateConnectorEntity" inverseName="sourceBlock" inverseEntity="CreateConnectorEntity"/>
+        <fetchIndex name="byBlockType">
+            <fetchIndexElement property="blockType" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byZIndex">
+            <fetchIndexElement property="zIndex" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="CreateBoardEntity" representedClassName="CreateBoardEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="backgroundColor" optional="YES" attributeType="String"/>
+        <attribute name="canvasOffsetX" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="canvasOffsetY" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="canvasScale" attributeType="Double" defaultValueString="1.0" usesScalarValueType="YES"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String" defaultValueString="Untitled Board"/>
+        <attribute name="parentBoardID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="sortOrder" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="blocks" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CreateBlockEntity" inverseName="board" inverseEntity="CreateBlockEntity"/>
+        <relationship name="connectors" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CreateConnectorEntity" inverseName="board" inverseEntity="CreateConnectorEntity"/>
+        <relationship name="project" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectEntity" inverseName="createBoards" inverseEntity="ProjectEntity"/>
+        <fetchIndex name="byName">
+            <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="bySortOrder">
+            <fetchIndexElement property="sortOrder" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byParentBoardID">
+            <fetchIndexElement property="parentBoardID" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="CreateConnectorEntity" representedClassName="CreateConnectorEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="arrowHead" attributeType="String" defaultValueString="arrow"/>
+        <attribute name="colorHex" attributeType="String" defaultValueString="#000000"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lineStyle" attributeType="String" defaultValueString="solid"/>
+        <attribute name="lineWidth" attributeType="Double" defaultValueString="2.0" usesScalarValueType="YES"/>
+        <attribute name="pathControlPointsJSON" optional="YES" attributeType="String"/>
+        <relationship name="board" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CreateBoardEntity" inverseName="connectors" inverseEntity="CreateBoardEntity"/>
+        <relationship name="sourceBlock" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CreateBlockEntity" inverseName="outgoingConnectors" inverseEntity="CreateBlockEntity"/>
+        <relationship name="targetBlock" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CreateBlockEntity" inverseName="incomingConnectors" inverseEntity="CreateBlockEntity"/>
+    </entity>
+    <entity name="EventItemEntity" representedClassName="EventItemEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="colorHex" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="productionPhase" attributeType="String"/>
+        <attribute name="sortOrder" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="startDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="project" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectEntity" inverseName="eventItems" inverseEntity="ProjectEntity"/>
+        <fetchIndex name="byPhase">
+            <fetchIndexElement property="productionPhase" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="bySortOrder">
+            <fetchIndexElement property="sortOrder" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="IdeaNoteEntity" representedClassName="IdeaNoteEntity" syncable="YES">
+        <attribute name="content" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="sortOrder" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="title" attributeType="String"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="section" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="IdeaSectionEntity" inverseName="notes" inverseEntity="IdeaSectionEntity"/>
+    </entity>
+    <entity name="IdeaSectionEntity" representedClassName="IdeaSectionEntity" syncable="YES">
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isExpanded" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="sortOrder" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="notes" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="IdeaNoteEntity" inverseName="section" inverseEntity="IdeaNoteEntity"/>
+    </entity>
+    <entity name="MoodBoardImageEntity" representedClassName="MoodBoardImageEntity" syncable="YES">
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="imageData" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="sortOrder" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="PaperworkEntity" representedClassName="PaperworkEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="annotationsData" optional="YES" attributeType="Binary"/>
+        <attribute name="currentPage" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="dateAdded" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dateModified" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="documentType" optional="YES" attributeType="String"/>
+        <attribute name="fileData" optional="YES" attributeType="Binary"/>
+        <attribute name="fileName" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isSigned" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="pageCount" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="contact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ContactEntity" inverseName="paperwork" inverseEntity="ContactEntity"/>
+        <fetchIndex name="byDateAdded">
+            <fetchIndexElement property="dateAdded" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byName">
+            <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="PlanBudgetItemEntity" representedClassName="PlanBudgetItemEntity" syncable="YES">
+        <attribute name="actualAmount" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="category" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dueDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="estimatedAmount" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isPaid" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="paidDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="sortOrder" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="subcategory" optional="YES" attributeType="String"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="vendorName" optional="YES" attributeType="String"/>
+        <fetchIndex name="byCategory">
+            <fetchIndexElement property="category" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="bySortOrder">
+            <fetchIndexElement property="sortOrder" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="PlanCharacterEntity" representedClassName="PlanCharacterEntity" syncable="YES">
+        <attribute name="age" optional="YES" attributeType="String"/>
+        <attribute name="castID" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="descriptionText" optional="YES" attributeType="String"/>
+        <attribute name="gender" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="sceneNumbers" optional="YES" attributeType="String"/>
+        <attribute name="sortOrder" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="traits" optional="YES" attributeType="String"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <fetchIndex name="byName">
+            <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="bySortOrder">
+            <fetchIndexElement property="sortOrder" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="PlanCrewMemberEntity" representedClassName="PlanCrewMemberEntity" syncable="YES">
+        <attribute name="agentEmail" optional="YES" attributeType="String"/>
+        <attribute name="agentName" optional="YES" attributeType="String"/>
+        <attribute name="agentPhone" optional="YES" attributeType="String"/>
+        <attribute name="availabilityEnd" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="availabilityStart" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="email" optional="YES" attributeType="String"/>
+        <attribute name="headshotData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="headshotURL" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="imdbID" optional="YES" attributeType="String"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="phone" optional="YES" attributeType="String"/>
+        <attribute name="rankNumber" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="role" optional="YES" attributeType="String"/>
+        <attribute name="section" optional="YES" attributeType="String" defaultValueString="Top Picks"/>
+        <attribute name="tags" optional="YES" attributeType="String"/>
+        <attribute name="websiteURL" optional="YES" attributeType="String"/>
+        <fetchIndex name="byName">
+            <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byCreatedAt">
+            <fetchIndexElement property="createdAt" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="bySection">
+            <fetchIndexElement property="section" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="PlanLocationEntity" representedClassName="PlanLocationEntity" syncable="YES">
+        <attribute name="additionalImagesData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="address" optional="YES" attributeType="String"/>
+        <attribute name="contactEmail" optional="YES" attributeType="String"/>
+        <attribute name="contactName" optional="YES" attributeType="String"/>
+        <attribute name="contactPhone" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dailyRate" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="descriptionText" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="imageData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="latitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="longitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="section" optional="YES" attributeType="String" defaultValueString="Scouting"/>
+        <attribute name="sortOrder" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <fetchIndex name="byName">
+            <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="bySection">
+            <fetchIndexElement property="section" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="PlanScheduleItemEntity" representedClassName="PlanScheduleItemEntity" syncable="YES">
+        <attribute name="assignedActorIDs" optional="YES" attributeType="String"/>
+        <attribute name="assignedCrewIDs" optional="YES" attributeType="String"/>
+        <attribute name="category" optional="YES" attributeType="String"/>
+        <attribute name="colorHex" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="descriptionText" optional="YES" attributeType="String"/>
+        <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isAllDay" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="locationID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="sortOrder" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="startDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="title" attributeType="String"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <fetchIndex name="byStartDate">
+            <fetchIndexElement property="startDate" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byCategory">
+            <fetchIndexElement property="category" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="ProductionReportEntity" representedClassName="ProductionReportEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="accidentReport" optional="YES" attributeType="String"/>
+        <attribute name="atmosphereCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="cameraWrap" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="castReportJSON" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="crewCall" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dayNumber" attributeType="Integer 32" defaultValueString="1" usesScalarValueType="YES"/>
+        <attribute name="director" optional="YES" attributeType="String"/>
+        <attribute name="equipmentIssues" optional="YES" attributeType="String"/>
+        <attribute name="firstAD" optional="YES" attributeType="String"/>
+        <attribute name="firstShotAfterLunch" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="firstShotTime" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lastManOut" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lunchCall" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="pagesCompleted" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="pagesScheduled" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="producer" optional="YES" attributeType="String"/>
+        <attribute name="productionNotes" optional="YES" attributeType="String"/>
+        <attribute name="projectName" optional="YES" attributeType="String"/>
+        <attribute name="reportNumber" attributeType="Integer 32" defaultValueString="1" usesScalarValueType="YES"/>
+        <attribute name="scenesCompletedJSON" optional="YES" attributeType="String"/>
+        <attribute name="scenesPartialJSON" optional="YES" attributeType="String"/>
+        <attribute name="scenesScheduledJSON" optional="YES" attributeType="String"/>
+        <attribute name="scriptColor" optional="YES" attributeType="String"/>
+        <attribute name="scriptDated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="shootDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="shootingCall" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="signatureDataJSON" optional="YES" attributeType="String"/>
+        <attribute name="specialAbilityCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="standInsCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="status" attributeType="String" defaultValueString="draft"/>
+        <attribute name="unitProductionManager" optional="YES" attributeType="String"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="project" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectEntity" inverseName="productionReports" inverseEntity="ProjectEntity"/>
+        <fetchIndex name="byShootDate">
+            <fetchIndexElement property="shootDate" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byReportNumber">
+            <fetchIndexElement property="reportNumber" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="ProjectEntity" representedClassName="ProjectEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="breakdownVersionsData" optional="YES" attributeType="Binary"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="productionCompany" optional="YES" attributeType="String"/>
+        <attribute name="scheduleVersionsData" optional="YES" attributeType="Binary"/>
+        <attribute name="selectedBreakdownVersionData" optional="YES" attributeType="Binary"/>
+        <attribute name="selectedScheduleVersionData" optional="YES" attributeType="Binary"/>
+        <attribute name="startDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="status" optional="YES" attributeType="String"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="user" optional="YES" attributeType="String"/>
+        <attribute name="wrapDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="budgetVersions" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="BudgetVersionEntity" inverseName="project" inverseEntity="BudgetVersionEntity"/>
+        <relationship name="calendarEvents" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CalendarEntity" inverseName="project" inverseEntity="CalendarEntity"/>
+        <relationship name="callSheets" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CallSheetEntity" inverseName="project" inverseEntity="CallSheetEntity"/>
+        <relationship name="createBoards" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CreateBoardEntity" inverseName="project" inverseEntity="CreateBoardEntity"/>
+        <relationship name="eventItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="EventItemEntity" inverseName="project" inverseEntity="EventItemEntity"/>
+        <relationship name="productionReports" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ProductionReportEntity" inverseName="project" inverseEntity="ProductionReportEntity"/>
+        <relationship name="scenes" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="SceneEntity" inverseName="project" inverseEntity="SceneEntity"/>
+        <relationship name="screenplays" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ScreenplayDraftEntity" inverseName="project" inverseEntity="ScreenplayDraftEntity"/>
+        <relationship name="scriptRevisions" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ScriptRevisionEntity" inverseName="project" inverseEntity="ScriptRevisionEntity"/>
+        <relationship name="shootDays" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ShootDayEntity" inverseName="project" inverseEntity="ShootDayEntity"/>
+        <relationship name="tasks" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="TaskEntity" inverseName="project" inverseEntity="TaskEntity"/>
+        <relationship name="timeEntries" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="TimeEntryEntity" inverseName="project" inverseEntity="TimeEntryEntity"/>
+        <relationship name="wrapReports" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="WrapReportEntity" inverseName="project" inverseEntity="WrapReportEntity"/>
+    </entity>
+    <entity name="RateCardEntity" representedClassName="RateCardEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="category" optional="YES" attributeType="String"/>
+        <attribute name="defaultRate" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="defaultUnit" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="RoleEntity" representedClassName="RoleEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="category" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isCustom" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isDefault" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="sortOrder" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <fetchIndex name="byCategory">
+            <fetchIndexElement property="category" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byName">
+            <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="SavedSearchEntity" representedClassName="SavedSearchEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="categoriesJSON" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="departmentsJSON" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="searchText" optional="YES" attributeType="String"/>
+        <attribute name="showFavoritesOnly" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="sortOrder" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="tagsJSON" optional="YES" attributeType="String"/>
+        <fetchIndex name="byName">
+            <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="bySortOrder">
+            <fetchIndexElement property="sortOrder" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="SceneEntity" representedClassName="SceneEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="breakdownVersionId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="castIDs" optional="YES" attributeType="String"/>
+        <attribute name="castMembersJSON" optional="YES" attributeType="String"/>
+        <attribute name="contentHash" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date"/>
+        <attribute name="descriptionText" optional="YES" attributeType="String"/>
+        <attribute name="displayOrder" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="importedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastLocalEdit" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="locationType" optional="YES" attributeType="String"/>
+        <attribute name="normalizedHash" optional="YES" attributeType="String"/>
+        <attribute name="number" optional="YES" attributeType="String"/>
+        <attribute name="pageEighths" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="pageEighthsString" optional="YES" attributeType="String"/>
+        <attribute name="pageNumber" optional="YES" attributeType="String"/>
+        <attribute name="provenanceFlags" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sceneSlug" optional="YES" attributeType="String"/>
+        <attribute name="scheduleOrder" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="scriptDay" optional="YES" attributeType="String"/>
+        <attribute name="scriptFDX" optional="YES" attributeType="String"/>
+        <attribute name="scriptLocation" optional="YES" attributeType="String"/>
+        <attribute name="scriptText" optional="YES" attributeType="String"/>
+        <attribute name="sortIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sourceFileHash" optional="YES" attributeType="String"/>
+        <attribute name="sourceID" optional="YES" attributeType="String"/>
+        <attribute name="timeOfDay" optional="YES" attributeType="String"/>
+        <relationship name="breakdown" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="BreakdownEntity" inverseName="scene" inverseEntity="BreakdownEntity"/>
+        <relationship name="importedFromRevision" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ScriptRevisionEntity" inverseName="scenesImported" inverseEntity="ScriptRevisionEntity"/>
+        <relationship name="project" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectEntity" inverseName="scenes" inverseEntity="ProjectEntity"/>
+        <relationship name="shootDay" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ShootDayEntity" inverseName="scenes" inverseEntity="ShootDayEntity"/>
+        <relationship name="shots" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ShotEntity" inverseName="scene" inverseEntity="ShotEntity"/>
+        <fetchIndex name="byNumber">
+            <fetchIndexElement property="number" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="bySortIndex">
+            <fetchIndexElement property="sortIndex" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byBreakdownVersionId">
+            <fetchIndexElement property="breakdownVersionId" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="ScreenplayDraftEntity" representedClassName="ScreenplayDraftEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="author" optional="YES" attributeType="String"/>
+        <attribute name="content" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="draftInfo" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="importedFrom" optional="YES" attributeType="String"/>
+        <attribute name="pageCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="projectTitle" attributeType="String"/>
+        <attribute name="sceneCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sortOrder" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="versionName" optional="YES" attributeType="String"/>
+        <attribute name="wordCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="project" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectEntity" inverseName="screenplays" inverseEntity="ProjectEntity"/>
+        <fetchIndex name="byTitle">
+            <fetchIndexElement property="projectTitle" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byUpdatedAt">
+            <fetchIndexElement property="updatedAt" type="Binary" order="descending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="ScriptRevisionEntity" representedClassName="ScriptRevisionEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="colorName" optional="YES" attributeType="String"/>
+        <attribute name="fileData" optional="YES" attributeType="Binary"/>
+        <attribute name="fileHash" optional="YES" attributeType="String"/>
+        <attribute name="fileName" optional="YES" attributeType="String"/>
+        <attribute name="fileSize" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="importedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="importedBy" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="pageCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="pageCountDelta" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="revisionName" optional="YES" attributeType="String"/>
+        <attribute name="sceneCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="scenesAdded" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="scenesModified" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="scenesRemoved" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="loadTracking" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ScriptRevisionLoadTrackingEntity" inverseName="revision" inverseEntity="ScriptRevisionLoadTrackingEntity"/>
+        <relationship name="project" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectEntity" inverseName="scriptRevisions" inverseEntity="ProjectEntity"/>
+        <relationship name="scenesImported" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="SceneEntity" inverseName="importedFromRevision" inverseEntity="SceneEntity"/>
+    </entity>
+    <entity name="ScriptRevisionLoadTrackingEntity" representedClassName="ScriptRevisionLoadTrackingEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="appType" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="loadedDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="pageCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="revisionId" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="sceneCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="revision" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ScriptRevisionEntity" inverseName="loadTracking" inverseEntity="ScriptRevisionEntity"/>
+        <fetchIndex name="byRevisionAndApp">
+            <fetchIndexElement property="revisionId" type="Binary" order="ascending"/>
+            <fetchIndexElement property="appType" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="ShootDayEntity" representedClassName="ShootDayEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dayNumber" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="typeRaw" attributeType="Integer 16" defaultValueString="1" usesScalarValueType="YES"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="project" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectEntity" inverseName="shootDays" inverseEntity="ProjectEntity"/>
+        <relationship name="scenes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="SceneEntity" inverseName="shootDay" inverseEntity="SceneEntity"/>
+    </entity>
+    <entity name="ShotEntity" representedClassName="ShotEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="cam" optional="YES" attributeType="String"/>
+        <attribute name="castID" optional="YES" attributeType="String"/>
+        <attribute name="code" optional="YES" attributeType="String"/>
+        <attribute name="color" optional="YES" attributeType="String"/>
+        <attribute name="descriptionText" optional="YES" attributeType="String"/>
+        <attribute name="focalLength" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="index" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lens" optional="YES" attributeType="String"/>
+        <attribute name="lightingNotes" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="rig" optional="YES" attributeType="String"/>
+        <attribute name="storyboardImageData" optional="YES" attributeType="Binary"/>
+        <attribute name="storyboardImageOffsetX" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="storyboardImageOffsetY" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="storyboardText" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+        <relationship name="scene" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="SceneEntity" inverseName="shots" inverseEntity="SceneEntity"/>
+    </entity>
+    <entity name="TaskEntity" representedClassName=".TaskEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="assignedTo" optional="YES" attributeType="String"/>
+        <attribute name="completedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isCompleted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="reminderDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <relationship name="project" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectEntity" inverseName="tasks" inverseEntity="ProjectEntity"/>
+    </entity>
+    <entity name="TimeEntryEntity" representedClassName="TimeEntryEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="category" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="createdBy" optional="YES" attributeType="String"/>
+        <attribute name="duration" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="endTime" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="sceneNumber" optional="YES" attributeType="String"/>
+        <attribute name="shootDayID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="startTime" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="project" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectEntity" inverseName="timeEntries" inverseEntity="ProjectEntity"/>
+        <relationship name="wrapReport" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="WrapReportEntity" inverseName="timeEntries" inverseEntity="WrapReportEntity"/>
+        <fetchIndex name="byCategory">
+            <fetchIndexElement property="category" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byStartTime">
+            <fetchIndexElement property="startTime" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="WrapReportEntity" representedClassName="WrapReportEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="accidents" optional="YES" attributeType="String"/>
+        <attribute name="callTime" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="completedScenesJSON" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dayNumber" attributeType="Integer 32" defaultValueString="1" usesScalarValueType="YES"/>
+        <attribute name="delayNotes" optional="YES" attributeType="String"/>
+        <attribute name="firstShotTime" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lunchEnd" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lunchStart" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="partialScenesJSON" optional="YES" attributeType="String"/>
+        <attribute name="scheduledScenesJSON" optional="YES" attributeType="String"/>
+        <attribute name="shootDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="signatureDataJSON" optional="YES" attributeType="String"/>
+        <attribute name="status" attributeType="String" defaultValueString="draft"/>
+        <attribute name="submittedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="totalHours" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="weatherConditions" optional="YES" attributeType="String"/>
+        <attribute name="wrapTime" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="project" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ProjectEntity" inverseName="wrapReports" inverseEntity="ProjectEntity"/>
+        <relationship name="timeEntries" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="TimeEntryEntity" inverseName="wrapReport" inverseEntity="TimeEntryEntity"/>
+        <fetchIndex name="byShootDate">
+            <fetchIndexElement property="shootDate" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byDayNumber">
+            <fetchIndexElement property="dayNumber" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+</model>

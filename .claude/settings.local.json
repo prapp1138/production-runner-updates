@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcodebuild:*)",
+      "Bash(find:*)",
+      "Bash(xcrun swiftc:*)",
+      "Bash(swiftc:*)",
+      "Bash(xcrun xcodeproj --help:*)",
+      "Bash(defaults read:*)",
+      "Bash(log stream:*)",
+      "Bash(awk:*)",
+      "Bash(\"/Users/editing/Desktop/Production Runner Master Files/Current Project/Production Runner/Production Runner/Applications/Shot List/StoryboardView.swift\")",
+      "Bash(\"/Users/editing/Desktop/Production Runner Master Files/Current Project/Production Runner/Production Runner/Applications/Paperwork/PaperworkView.swift\")",
+      "Bash(cat:*)",
+      "Bash(python3:*)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild:*)",
+      "Bash(pkill:*)",
+      "Bash(grep:*)",
+      "Bash(for dir in \"Production Runner/Applications\"/*)",
+      "Bash(done)",
+      "Bash(xcrun simctl:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

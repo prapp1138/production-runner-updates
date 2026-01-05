@@ -1,0 +1,3920 @@
+{
+  "version": "1.0",
+  "name": "Standard Budget Template",
+  "sheets": [
+    {
+      "id": "above_the_line",
+      "name": "Above the Line",
+      "rows": [
+        {
+          "id": "10-00",
+          "description": "DEVELOPMENT COSTS",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "10-01",
+          "description": "Prelim Breakdown",
+          "amount": 1.0,
+          "unit": null,
+          "x": 1.0,
+          "rate": 1000.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "10-02",
+          "description": "Office Expenses",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "10-03",
+          "description": "Survey/Scouting",
+          "amount": 1.0,
+          "unit": null,
+          "x": 20.0,
+          "rate": 150.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "10-04",
+          "description": "Travel Expenses",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "10-05",
+          "description": "Legal",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "10-06",
+          "description": "All in",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "10-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "11-00",
+          "description": "STORY & RIGHTS",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "11-01",
+          "description": "Writers",
+          "amount": 2.0,
+          "unit": null,
+          "x": 1.0,
+          "rate": 3500.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "11-02",
+          "description": "Script Purchase",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "11-03",
+          "description": "Script Copies",
+          "amount": 1.0,
+          "unit": null,
+          "x": 1.0,
+          "rate": 500.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "11-04",
+          "description": "Script Timing",
+          "amount": 1.0,
+          "unit": null,
+          "x": 1.0,
+          "rate": 500.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "11-05",
+          "description": "Script Clearance Report",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "11-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "12-00",
+          "description": "PRODUCERS UNIT",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "12-01",
+          "description": "Producer ",
+          "amount": 3.0,
+          "unit": null,
+          "x": 1.0,
+          "rate": 20000.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "12-02",
+          "description": "Co-Producer",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "12-03",
+          "description": "Asst to Producers",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "12-04",
+          "description": "Producers Entertainment",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "12-05",
+          "description": "All In",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "12-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "13-00",
+          "description": "DIRECTOR & STAFF",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "13-01",
+          "description": "Director ",
+          "amount": 1.0,
+          "unit": null,
+          "x": 50.0,
+          "rate": 600.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "13-02",
+          "description": "Asst to Director",
+          "amount": 1.0,
+          "unit": null,
+          "x": 30.0,
+          "rate": 250.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "13-03",
+          "description": "Director Entertainment",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "13-04",
+          "description": "Storyboard Artist",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "13-05",
+          "description": "Choreographer",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "13-06",
+          "description": "Technical Advisor",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "13-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "14-00",
+          "description": "CAST",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "14-01",
+          "description": "Lead Cast",
+          "amount": 2.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 1200.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "14-02",
+          "description": "Supporting Cast",
+          "amount": 8.0,
+          "unit": null,
+          "x": 5.0,
+          "rate": 500.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "14-03",
+          "description": "Day Players",
+          "amount": 5.0,
+          "unit": null,
+          "x": 6.0,
+          "rate": 250.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "14-04",
+          "description": "Stunt Coordinators",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "14-05",
+          "description": "Stunts & Adjustments",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "14-06",
+          "description": "Stunt Equipment",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "14-07",
+          "description": "Casting Director",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "14-08",
+          "description": "Casting Asst",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "14-09",
+          "description": "Casting Expenses",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "14-10",
+          "description": "Rehearsal Expenses",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "14-11",
+          "description": "Looping / ADR",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "14-12",
+          "description": "Mileage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "14-13",
+          "description": "Cast Drivers",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "14-14",
+          "description": "Cast Payroll Handling Fees",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "14-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "15-00",
+          "description": "TRAVEL & LIVING",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "15-01",
+          "description": "Airfares",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "15-02",
+          "description": "Transportation",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "15-03",
+          "description": "Hotel / Lodging",
+          "amount": 40.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 90.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "15-04",
+          "description": "Per Diem",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "15-05",
+          "description": "Self Drive Vehicles & Gas",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "15-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        }
+      ]
+    },
+    {
+      "id": "production",
+      "name": "Production Expenses",
+      "rows": [
+        {
+          "id": "20-00",
+          "description": "PRODUCTION STAFF",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-01",
+          "description": "Line Producer",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-02",
+          "description": "Production Manager",
+          "amount": 1.0,
+          "unit": null,
+          "x": 60.0,
+          "rate": 400.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-03",
+          "description": "1st Assistant Director",
+          "amount": 1.0,
+          "unit": null,
+          "x": 30.0,
+          "rate": 400.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-04",
+          "description": "2nd Assistant Director",
+          "amount": 1.0,
+          "unit": null,
+          "x": 30.0,
+          "rate": 350.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-05",
+          "description": "2nd 2nd Assistant Director",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-06",
+          "description": "Script Supervisor",
+          "amount": 1.0,
+          "unit": null,
+          "x": 35.0,
+          "rate": 450.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-07",
+          "description": "Production Coordinator",
+          "amount": 1.0,
+          "unit": null,
+          "x": 60.0,
+          "rate": 300.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-08",
+          "description": "Asst Prod Coordinator",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-09",
+          "description": "Production Secretary",
+          "amount": 1.0,
+          "unit": null,
+          "x": 35.0,
+          "rate": 250.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-10",
+          "description": "Production Assistants",
+          "amount": 3.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 250.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-11",
+          "description": "Production Accountant",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-12",
+          "description": "1st Asst Accountant",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-13",
+          "description": "Payroll Accountant",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-14",
+          "description": "Box Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "21-00",
+          "description": "EXTRA TALENT",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "21-01",
+          "description": "Stand-ins",
+          "amount": 2.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 200.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-11",
+          "description": "Union Extras",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-12",
+          "description": "Non-Union Extras",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-13",
+          "description": "Dancers",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-14",
+          "description": "Extras Coordinator",
+          "amount": 1.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 200.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-15",
+          "description": "Fitting / MPV / Wardrobe Allow",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "20-16",
+          "description": "Mileage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "21-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "22-00",
+          "description": "SET DESIGN",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "22-01",
+          "description": "Production Designer",
+          "amount": 1.0,
+          "unit": null,
+          "x": 60.0,
+          "rate": 300.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "22-02",
+          "description": "Art Director",
+          "amount": 1.0,
+          "unit": null,
+          "x": 20.0,
+          "rate": 250.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "22-03",
+          "description": "Research",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "22-04",
+          "description": "Expendables",
+          "amount": 1.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 300.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "22-05",
+          "description": "Signage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "22-06",
+          "description": "Blueprints",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "22-07",
+          "description": "Box Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "22-08",
+          "description": "Car Allowance",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "22-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "23-00",
+          "description": "SET CONSTRUCTION",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "23-01",
+          "description": "Construction Coordinator",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "23-02",
+          "description": "Construction Labor",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "23-03",
+          "description": "Construction Office Coordinator",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "23-04",
+          "description": "Purchases",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "23-05",
+          "description": "Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "23-06",
+          "description": "Paint Disposal",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "23-07",
+          "description": "Box Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "23-08",
+          "description": "Shop Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "23-09",
+          "description": "Loss & Damage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "23-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "24-00",
+          "description": "SET PRE-RIG & STRIKE",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "24-01",
+          "description": "Pre-rig & Strike Crews",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "24-02",
+          "description": "Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "24-03",
+          "description": "Miscellaneous Expenses",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "24-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "25-00",
+          "description": "SET OPERATIONS",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "25-01",
+          "description": "Key Grip",
+          "amount": 1.0,
+          "unit": null,
+          "x": 28.0,
+          "rate": 400.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "25-02",
+          "description": "Best Boy Grip",
+          "amount": 1.0,
+          "unit": null,
+          "x": 28.0,
+          "rate": 350.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "25-03",
+          "description": "Dolly Grip",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "25-04",
+          "description": "Company Grip",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "25-05",
+          "description": "Addl Labor",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "25-06",
+          "description": "Purchases & Expendables",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "25-07",
+          "description": "Dolly Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "25-08",
+          "description": "Crane Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "25-09",
+          "description": "Grip Package Rentals",
+          "amount": 1.0,
+          "unit": null,
+          "x": 15.0,
+          "rate": 250.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "25-10",
+          "description": "Addl Equipment ",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "25-11",
+          "description": "Box Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "25-12",
+          "description": "Car Allowances",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "25-13",
+          "description": "Loss & Damage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "25-14",
+          "description": "Other",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "24-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "26-00",
+          "description": "SET DRESSING",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "26-01",
+          "description": "Set Decorator",
+          "amount": null,
+          "unit": null,
+          "x": 16.0,
+          "rate": 200.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "26-02",
+          "description": "On Set Dresser",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "26-03",
+          "description": "Leadman",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "26-04",
+          "description": "Set Dressers",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "26-05",
+          "description": "Swing Gang",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "26-06",
+          "description": "Greensman",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "26-07",
+          "description": "Purchases",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "26-08",
+          "description": "Green Purchases",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "26-09",
+          "description": "Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "26-10",
+          "description": "Expendables",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "26-11",
+          "description": "Clearances & Fees",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "26-12",
+          "description": "Box Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "26-13",
+          "description": "Car Allowances",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "26-14",
+          "description": "Loss & Damage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "26-15",
+          "description": "Other",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "26-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "27-00",
+          "description": "PROPERTY",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "27-01",
+          "description": "Property Master",
+          "amount": 1.0,
+          "unit": null,
+          "x": 1.0,
+          "rate": 3500.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "27-02",
+          "description": "Asst Props",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "27-03",
+          "description": "Addl Property Labor",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "27-04",
+          "description": "Armorer",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "27-05",
+          "description": "Purchases",
+          "amount": 1.0,
+          "unit": null,
+          "x": 1.0,
+          "rate": 3000.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "27-06",
+          "description": "Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "27-07",
+          "description": "Box Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "27-08",
+          "description": "Weapons & Ammo",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "27-09",
+          "description": "Car Allowances",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "27-10",
+          "description": "Loss & Damage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "27-11",
+          "description": "Other",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "27-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "28-00",
+          "description": "WARDROBE",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "28-01",
+          "description": "Costume Designer",
+          "amount": 1.0,
+          "unit": null,
+          "x": 35.0,
+          "rate": 300.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "28-02",
+          "description": "Wardrobe Supervisor",
+          "amount": 1.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 275.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "28-03",
+          "description": "Costumers",
+          "amount": 1.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 250.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "28-04",
+          "description": "Addl Labor",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "28-05",
+          "description": "Manufacturing & Seamstress",
+          "amount": 1.0,
+          "unit": null,
+          "x": 1.0,
+          "rate": 3500.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "28-06",
+          "description": "Purchases",
+          "amount": 1.0,
+          "unit": null,
+          "x": 1.0,
+          "rate": 3500.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "28-07",
+          "description": "Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "28-08",
+          "description": "Cleaning & Dying",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "28-09",
+          "description": "Alterations & Repairs",
+          "amount": 1.0,
+          "unit": null,
+          "x": 1.0,
+          "rate": 1000.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "28-10",
+          "description": "Box Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "28-11",
+          "description": "Car Allowances",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "28-12",
+          "description": "Loss & Damage",
+          "amount": 1.0,
+          "unit": null,
+          "x": 1.0,
+          "rate": 1000.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "28-13",
+          "description": "Other",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "28-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "29-00",
+          "description": "ELECTRIC",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "29-01",
+          "description": "Gaffer",
+          "amount": 1.0,
+          "unit": null,
+          "x": 30.0,
+          "rate": 500.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "29-02",
+          "description": "Best Boy Electrician",
+          "amount": 1.0,
+          "unit": null,
+          "x": 30.0,
+          "rate": 400.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "29-03",
+          "description": "Company Electricians",
+          "amount": 1.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 300.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "29-04",
+          "description": "Addl Labor",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "29-05",
+          "description": "Pre Rigging Electricians",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "29-06",
+          "description": "Expendables",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "29-07",
+          "description": "Purchases",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "29-08",
+          "description": "Electric Package",
+          "amount": 1.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 1500.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "29-09",
+          "description": "Addl Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "29-10",
+          "description": "Condor/ Crane/ Balloon",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "29-11",
+          "description": "Box Rental",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "29-12",
+          "description": "Los & Damage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "29-13",
+          "description": "Other",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "29-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "30-00",
+          "description": "CAMERA",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "30-01",
+          "description": "Director of Photography",
+          "amount": 1.0,
+          "unit": null,
+          "x": 50.0,
+          "rate": 500.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "30-02",
+          "description": "Camera Operator",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "30-03",
+          "description": "1st Asst Camera",
+          "amount": 1.0,
+          "unit": null,
+          "x": 15.0,
+          "rate": 250.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "30-04",
+          "description": "2nd Asst Camera",
+          "amount": 1.0,
+          "unit": null,
+          "x": 15.0,
+          "rate": 200.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "30-05",
+          "description": "DIT",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "30-06",
+          "description": "B Camera Crew",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "30-07",
+          "description": "Steadicam",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "30-08",
+          "description": "Equipment Rental",
+          "amount": 1.0,
+          "unit": null,
+          "x": 15.0,
+          "rate": 100.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "30-09",
+          "description": "Camera Package",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "30-10",
+          "description": "Addl Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "30-11",
+          "description": "Purchases",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "30-12",
+          "description": "Camera Car",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "30-13",
+          "description": "Box Rental",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "30-14",
+          "description": "Loss & Damage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "30-15",
+          "description": "Other",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "30-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "31-00",
+          "description": "PRODUCTION SOUND",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "31-01",
+          "description": "Sound Mixer",
+          "amount": 2.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 400.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "31-02",
+          "description": "Cable Wrangler",
+          "amount": 1.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 200.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "31-03",
+          "description": "Playback Rental & Labor",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "31-04",
+          "description": "Purchases",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "31-05",
+          "description": "Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "31-06",
+          "description": "Expendables",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "31-07",
+          "description": "Loss & Damage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "31-08",
+          "description": "Other",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "31-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "32-00",
+          "description": "MAKEUP & HAIR",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "32-01",
+          "description": "Key Make-up",
+          "amount": 1.0,
+          "unit": null,
+          "x": 30.0,
+          "rate": 250.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "32-02",
+          "description": "Asst Make-up",
+          "amount": 1.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 225.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "32-03",
+          "description": "Key Hair",
+          "amount": 1.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 225.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "32-04",
+          "description": "Asst Hair",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "32-05",
+          "description": "Addl Labor",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "32-06",
+          "description": "Wigs / Hairpieces",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "32-07",
+          "description": "Purchases",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "32-08",
+          "description": "Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "32-09",
+          "description": "Salon Services",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "32-10",
+          "description": "Box Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "32-11",
+          "description": "Car Allowances",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "32-12",
+          "description": "Other",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "32-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "33-00",
+          "description": "TRANSPORATION",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "33-01",
+          "description": "Transpo Coordinator",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "33-02",
+          "description": "Transpo Captain",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "33-03",
+          "description": "Drivers",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "33-04",
+          "description": "Truck Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "33-05",
+          "description": "Generator Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "33-06",
+          "description": "Fuel & Oil",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "33-07",
+          "description": "Meals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "33-08",
+          "description": "Repairs & Maintenance",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "33-09",
+          "description": "Mileage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "33-10",
+          "description": "Vehicle Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "33-11",
+          "description": "Car Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "33-12",
+          "description": "Box Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "33-13",
+          "description": "Motorhome Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "33-14",
+          "description": "Loss & Damage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "33-15",
+          "description": "Other",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "33-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "34-00",
+          "description": "LOCATIONS",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-01",
+          "description": "Location Manager",
+          "amount": 1.0,
+          "unit": null,
+          "x": 40.0,
+          "rate": 250.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-02",
+          "description": "Asst Location Manager",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-03",
+          "description": "Scouting",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-04",
+          "description": "Police",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-05",
+          "description": "Set Security",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-06",
+          "description": "Fire Safety Officer",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-07",
+          "description": "Medic",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-08",
+          "description": "Site Fees & Rentals ",
+          "amount": 1.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 1000.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-09",
+          "description": "Survey Costs",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-10",
+          "description": "Fees & Permits",
+          "amount": 1.0,
+          "unit": null,
+          "x": 1.0,
+          "rate": 1000.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-11",
+          "description": "Mileage & Parking",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-12",
+          "description": "Site Restoration",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-13",
+          "description": "Air Conditioning",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-14",
+          "description": "Catering",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-15",
+          "description": "Extras Catering",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-16",
+          "description": "Baggage & Equipment",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-17",
+          "description": "Other",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "34-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "35-00",
+          "description": "PICTURE VEHICLES & ANIMALS",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "35-01",
+          "description": "Picture Car Coordinator",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "35-02",
+          "description": "Drivers",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "35-03",
+          "description": "Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "35-04",
+          "description": "Aircraft & Helicopter",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "35-05",
+          "description": "Manufacturing",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "35-06",
+          "description": "Mechanic",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "35-07",
+          "description": "Animals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "35-08",
+          "description": "Wranglers & Handlers",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "35-09",
+          "description": "Feeding & Stabling",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "35-10",
+          "description": "Loss & Damage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "35-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "36-00",
+          "description": "SPECIAL EFFECTS",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "36-01",
+          "description": "SPFX Coordinator",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "36-02",
+          "description": "SPFX Labor",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "36-03",
+          "description": "Fire Department",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "36-04",
+          "description": "Purchase & Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "36-05",
+          "description": "Additional Permits",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "36-06",
+          "description": "Box Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "36-07",
+          "description": "Loss & Damage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "36-08",
+          "description": "Other",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "36-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "37-00",
+          "description": "VISUAL EFFECTS - POST",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "37-01",
+          "description": "Visual Effects Supervisor",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "37-02",
+          "description": "Minatures",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "37-03",
+          "description": "Wire Removal",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "37-04",
+          "description": "Mattes",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "37-05",
+          "description": "Purchases",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "37-06",
+          "description": "Misc Expenses",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "37-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "38-00",
+          "description": "FILM & LAB",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-01",
+          "description": "Raw Stock",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-02",
+          "description": "Develop Film",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-03",
+          "description": "Telecine",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-04",
+          "description": "Dailes",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-05",
+          "description": "Shipping",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-06",
+          "description": "Hard Drives (all files and backups)",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-07",
+          "description": "Other",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "38-00",
+          "description": "BELOW THE LINE TRAVEL",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-01",
+          "description": "Travel Coordinator",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-02",
+          "description": "Airfares",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-03",
+          "description": "Hotel & Lodging",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-04",
+          "description": "Per Diem",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-05",
+          "description": "Rental Cars",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-06",
+          "description": "Taxi & Shuttle",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-07",
+          "description": "Baggage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-08",
+          "description": "Carnet",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-09",
+          "description": "Visa",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-10",
+          "description": "Other",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "38-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        }
+      ]
+    },
+    {
+      "id": "post-production",
+      "name": "Post-Production Expenses",
+      "rows": [
+        {
+          "id": "45-00",
+          "description": "FILM EDITING",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "45-01",
+          "description": "Editor",
+          "amount": 1.0,
+          "unit": null,
+          "x": 90.0,
+          "rate": 400.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "45-02",
+          "description": "Asst Editor",
+          "amount": 1.0,
+          "unit": null,
+          "x": 45.0,
+          "rate": 250.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "45-03",
+          "description": "Music Editor",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "45-04",
+          "description": "Music Editor Room & Equipment",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "45-05",
+          "description": "Post Prod Accountant",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "45-06",
+          "description": "Messenger",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "45-07",
+          "description": "Expendables",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "45-08",
+          "description": "Cutting Room",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "45-09",
+          "description": "Equipement Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "45-10",
+          "description": "Cartage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "45-11",
+          "description": "Continuity",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "45-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "46-00",
+          "description": "MUSIC",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "46-01",
+          "description": "Music Supervisor",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 2000.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "46-02",
+          "description": "Composer Fee",
+          "amount": 1.0,
+          "unit": null,
+          "x": 1.0,
+          "rate": 15000.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "46-03",
+          "description": "Musicians",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "46-04",
+          "description": "Singers",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "46-05",
+          "description": "Song Writers",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "46-06",
+          "description": "Music Rights",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "46-07",
+          "description": "Clearance & Legal",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "46-08",
+          "description": "Original Song Purchase",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "46-09",
+          "description": "Recording Facility & Labor",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "46-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "47-00",
+          "description": "VISUAL EFFECTS",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "47-01",
+          "description": "Effects Supervisor",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "47-02",
+          "description": "CGI",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "47-03",
+          "description": "Transfers",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "47-04",
+          "description": "Conversions",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "47-05",
+          "description": "Other",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "47-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "48-00",
+          "description": "POST PRODUCTION SOUND",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "48-01",
+          "description": "Post Sound Package",
+          "amount": 1.0,
+          "unit": null,
+          "x": 15.0,
+          "rate": 1000.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "48-02",
+          "description": "ADR Facilities & Labor",
+          "amount": 1.0,
+          "unit": null,
+          "x": 5.0,
+          "rate": 1000.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "48-03",
+          "description": "Foley Sound FX",
+          "amount": 1.0,
+          "unit": null,
+          "x": 15.0,
+          "rate": 1000.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "48-04",
+          "description": "License Fees",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "48-05",
+          "description": "Other",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "48-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "49-00",
+          "description": "POST PRODUCTION FILM & LAB",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "49-01",
+          "description": "Stock Footage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "49-02",
+          "description": "Sound Neg Develop",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "49-03",
+          "description": "Answer Prints / Protect Masters",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "49-04",
+          "description": "Data Backup",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "49-05",
+          "description": "Opticals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "49-06",
+          "description": "Digital Video Elements",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "49-07",
+          "description": "Release Prints",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "49-08",
+          "description": "Titles",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": 0.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "49-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        }
+      ]
+    },
+    {
+      "id": "other",
+      "name": "Other Expenses",
+      "rows": [
+        {
+          "id": "55-00",
+          "description": "PUBLICITY",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "55-01",
+          "description": "Still Photographer",
+          "amount": 1.0,
+          "unit": null,
+          "x": 30.0,
+          "rate": 150.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "55-02",
+          "description": "Still Film & Lab",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "55-03",
+          "description": "Graphic Art",
+          "amount": 1.0,
+          "unit": null,
+          "x": 5.0,
+          "rate": 1000.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "55-04",
+          "description": "Markets & Film Festival",
+          "amount": 1.0,
+          "unit": null,
+          "x": 5.0,
+          "rate": 2500.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "55-05",
+          "description": "Publicist",
+          "amount": 1.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 250.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "55-06",
+          "description": "Sales Agent",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "55-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "56-00",
+          "description": "LEGAL & ACCOUNTING",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "56-01",
+          "description": "Production Legal",
+          "amount": 1.0,
+          "unit": null,
+          "x": 25.0,
+          "rate": 300.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "56-02",
+          "description": "Outside Legal",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "56-03",
+          "description": "LLC & Pass Through Audits",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "56-04",
+          "description": "Bank Charges",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "56-05",
+          "description": "Post Accounting",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "56-06",
+          "description": "Accounting Software",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "56-07",
+          "description": "Audits",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "56-08",
+          "description": "MPAA Rating",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "56-09",
+          "description": "Accounting Adminstration",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "56-10",
+          "description": "Other",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "56-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "57-00",
+          "description": "GENERAL EXPENSE",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "57-01",
+          "description": "Production Office Lease",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "57-02",
+          "description": "Shipping & Postage",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "57-03",
+          "description": "Copier",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "57-04",
+          "description": "Production Office Supplies",
+          "amount": 1.0,
+          "unit": null,
+          "x": 1.0,
+          "rate": 500.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "57-05",
+          "description": "Furniture & Equipment Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "57-06",
+          "description": "Phone & Communication Rentals",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "57-07",
+          "description": "Wrap Party & Crew Relations",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "57-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        },
+        {
+          "id": "58-00",
+          "description": "INSURANCE",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": true,
+          "isSubtotal": false
+        },
+        {
+          "id": "58-01",
+          "description": "Insurance Policy Package",
+          "amount": 1.0,
+          "unit": null,
+          "x": 1.0,
+          "rate": 400.0,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "58-02",
+          "description": "Insurance Exams",
+          "amount": null,
+          "unit": null,
+          "x": 1.0,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": false
+        },
+        {
+          "id": "58-00",
+          "description": "Subtotal",
+          "amount": null,
+          "unit": null,
+          "x": null,
+          "rate": null,
+          "isSection": false,
+          "isSubtotal": true
+        }
+      ]
+    }
+  ]
+}
