@@ -18,6 +18,7 @@
 		730EAD7B2F0B1E1800834F78 /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = 730EAD672F0B1E1800834F78 /* FirebaseAI */; };
 		730EAD7D2F0B1E1800834F78 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CA823F912EEA27CC000D8167 /* GoogleService-Info.plist */; };
 		7391CE902F05DDE0007B8360 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 7391CE8F2F05DDE0007B8360 /* Sparkle */; };
+		73EA0A472F0C5E6A000C7BDD /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 73EA0A462F0C5E6A000C7BDD /* Sentry */; };
 		CA647CBB2EB97EEF0030A4CD /* CoreXLSX in Frameworks */ = {isa = PBXBuildFile; productRef = CA647CBA2EB97EEF0030A4CD /* CoreXLSX */; };
 		CA823F922EEA27CC000D8167 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CA823F912EEA27CC000D8167 /* GoogleService-Info.plist */; };
 		CAED288E2EE9C3C7002D2126 /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = CAED288D2EE9C3C7002D2126 /* FirebaseAI */; };
@@ -60,28 +61,6 @@
 		730EAD852F0B20CB00834F78 /* Exceptions for "Production Runner" folder in "Production Runner" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Applications/Calendar/Models/CalendarCommands.swift,
-				Applications/Calendar/Services/EventKitService.swift,
-				Applications/Calendar/Views/CalendarSheets.swift,
-				Applications/Calendar/Views/CalendarView.swift,
-				"Applications/Plan/Entities/CastingActorEntity+CoreDataClass.swift",
-				"Applications/Plan/Entities/CastingActorEntity+CoreDataProperties.swift",
-				"Applications/Plan/Entities/IdeaNoteEntity+CoreDataClass.swift",
-				"Applications/Plan/Entities/IdeaNoteEntity+CoreDataProperties.swift",
-				"Applications/Plan/Entities/IdeaSectionEntity+CoreDataClass.swift",
-				"Applications/Plan/Entities/IdeaSectionEntity+CoreDataProperties.swift",
-				"Applications/Plan/Entities/PlanBudgetItemEntity+CoreDataClass.swift",
-				"Applications/Plan/Entities/PlanBudgetItemEntity+CoreDataProperties.swift",
-				"Applications/Plan/Entities/PlanCharacterEntity+CoreDataClass.swift",
-				"Applications/Plan/Entities/PlanCharacterEntity+CoreDataProperties.swift",
-				"Applications/Plan/Entities/PlanCrewMemberEntity+CoreDataClass.swift",
-				"Applications/Plan/Entities/PlanCrewMemberEntity+CoreDataProperties.swift",
-				"Applications/Plan/Entities/PlanLocationEntity+CoreDataClass.swift",
-				"Applications/Plan/Entities/PlanLocationEntity+CoreDataProperties.swift",
-				"Applications/Plan/Entities/PlanScheduleItemEntity+CoreDataClass.swift",
-				"Applications/Plan/Entities/PlanScheduleItemEntity+CoreDataProperties.swift",
-				Applications/Plan/PlanView.swift,
-				Applications/Plan/Utilities/PlanDragDropTypes.swift,
 				"Applications/Budgeting/Model/BudgetEntity+Extensions.swift",
 				Applications/Budgeting/Model/BudgetLineItemEntity.swift,
 				Applications/Budgeting/Model/BudgetModel.swift,
@@ -113,6 +92,10 @@
 				Applications/Budgeting/Views/BudgetView.swift,
 				Applications/Budgeting/Views/EditBudgetItemView.swift,
 				Applications/Budgeting/Views/PayrollViews.swift,
+				Applications/Calendar/Models/CalendarCommands.swift,
+				Applications/Calendar/Services/EventKitService.swift,
+				Applications/Calendar/Views/CalendarSheets.swift,
+				Applications/Calendar/Views/CalendarView.swift,
 				Applications/Chat/ChatService.swift,
 				Applications/Chat/ChatView.swift,
 				"Applications/Live Mode/Components/LiveModeComponents.swift",
@@ -134,6 +117,24 @@
 				"Applications/Live Mode/Views/ViewOnly/StoryboardViewer.swift",
 				"Applications/Paperwork/PaperworkEntity+Extensions.swift",
 				Applications/Paperwork/PaperworkView.swift,
+				"Applications/Plan/Entities/CastingActorEntity+CoreDataClass.swift",
+				"Applications/Plan/Entities/CastingActorEntity+CoreDataProperties.swift",
+				"Applications/Plan/Entities/IdeaNoteEntity+CoreDataClass.swift",
+				"Applications/Plan/Entities/IdeaNoteEntity+CoreDataProperties.swift",
+				"Applications/Plan/Entities/IdeaSectionEntity+CoreDataClass.swift",
+				"Applications/Plan/Entities/IdeaSectionEntity+CoreDataProperties.swift",
+				"Applications/Plan/Entities/PlanBudgetItemEntity+CoreDataClass.swift",
+				"Applications/Plan/Entities/PlanBudgetItemEntity+CoreDataProperties.swift",
+				"Applications/Plan/Entities/PlanCharacterEntity+CoreDataClass.swift",
+				"Applications/Plan/Entities/PlanCharacterEntity+CoreDataProperties.swift",
+				"Applications/Plan/Entities/PlanCrewMemberEntity+CoreDataClass.swift",
+				"Applications/Plan/Entities/PlanCrewMemberEntity+CoreDataProperties.swift",
+				"Applications/Plan/Entities/PlanLocationEntity+CoreDataClass.swift",
+				"Applications/Plan/Entities/PlanLocationEntity+CoreDataProperties.swift",
+				"Applications/Plan/Entities/PlanScheduleItemEntity+CoreDataClass.swift",
+				"Applications/Plan/Entities/PlanScheduleItemEntity+CoreDataProperties.swift",
+				Applications/Plan/PlanView.swift,
+				Applications/Plan/Utilities/PlanDragDropTypes.swift,
 				Applications/Scripty/Scripty.swift,
 				"CoreData/Extensions/BudgetVersionEntity+Extensions.swift",
 				Hidden/ScriptyView.swift,
@@ -189,6 +190,7 @@
 				CA647CBB2EB97EEF0030A4CD /* CoreXLSX in Frameworks */,
 				CAED28962EE9C3C7002D2126 /* FirebaseAnalyticsIdentitySupport in Frameworks */,
 				CAED28942EE9C3C7002D2126 /* FirebaseAnalyticsCore in Frameworks */,
+				73EA0A472F0C5E6A000C7BDD /* Sentry in Frameworks */,
 				CAED28922EE9C3C7002D2126 /* FirebaseAnalytics in Frameworks */,
 				CAED28A52EE9D1A5002D2126 /* FirebaseFirestore in Frameworks */,
 				CAED28A32EE9D196002D2126 /* FirebaseAuth in Frameworks */,
@@ -305,6 +307,7 @@
 				CAED28A22EE9D196002D2126 /* FirebaseAuth */,
 				CAED28A42EE9D1A5002D2126 /* FirebaseFirestore */,
 				7391CE8F2F05DDE0007B8360 /* Sparkle */,
+				73EA0A462F0C5E6A000C7BDD /* Sentry */,
 			);
 			productName = "Production Runner";
 			productReference = CAFB73B82E66067200EF97F8 /* Production Runner.app */;
@@ -393,6 +396,7 @@
 				CA647CB92EB97EEF0030A4CD /* XCRemoteSwiftPackageReference "CoreXLSX" */,
 				CAED288C2EE9C3C7002D2126 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				7391CE8E2F05DDE0007B8360 /* XCRemoteSwiftPackageReference "Sparkle" */,
+				73EA0A452F0C5E6A000C7BDD /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CAFB73B92E66067200EF97F8 /* Products */;
@@ -709,7 +713,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Production Runner/Production Runner.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = Alpha;
 				DEVELOPMENT_TEAM = XHSU8R848L;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -733,7 +737,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.01.00;
+				MARKETING_VERSION = 0.02;
 				PRODUCT_BUNDLE_IDENTIFIER = "M42.Production-Runner";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -758,7 +762,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Production Runner/Production Runner.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = Alpha;
 				DEVELOPMENT_TEAM = XHSU8R848L;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -782,7 +786,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.01.00;
+				MARKETING_VERSION = 0.02;
 				PRODUCT_BUNDLE_IDENTIFIER = "M42.Production-Runner";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -970,6 +974,14 @@
 				minimumVersion = 2.8.1;
 			};
 		};
+		73EA0A452F0C5E6A000C7BDD /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
+			};
+		};
 		CA647CB92EB97EEF0030A4CD /* XCRemoteSwiftPackageReference "CoreXLSX" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/CoreOffice/CoreXLSX";
@@ -1038,6 +1050,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7391CE8E2F05DDE0007B8360 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
+		};
+		73EA0A462F0C5E6A000C7BDD /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 73EA0A452F0C5E6A000C7BDD /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
 		};
 		CA647CBA2EB97EEF0030A4CD /* CoreXLSX */ = {
 			isa = XCSwiftPackageProductDependency;

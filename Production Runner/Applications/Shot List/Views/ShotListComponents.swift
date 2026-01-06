@@ -66,6 +66,63 @@ private func isValidImageURL(_ url: URL) -> Bool {
     #endif
 }
 
+// MARK: - Compact Scene Card (For Top Down View)
+struct CompactSceneCard: View {
+    let scene: NSManagedObject
+    let isSelected: Bool
+    var accentColor: Color = .red
+    var textColor: Color = .primary
+    var secondaryTextColor: Color = .secondary
+
+    @State private var isHovered = false
+
+    var body: some View {
+        HStack(spacing: 6) {
+            // Scene number
+            Text(sceneNumber)
+                .font(.system(size: 12, weight: .bold, design: .rounded))
+                .foregroundStyle(isSelected ? .white : textColor)
+
+            Spacer()
+
+            // Shot count
+            Text("\(shotCount)")
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(isSelected ? .white.opacity(0.8) : secondaryTextColor)
+                .monospacedDigit()
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(isSelected ? accentColor : (isHovered ? Color.primary.opacity(0.06) : Color.primary.opacity(0.03)))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .strokeBorder(isSelected ? accentColor.opacity(0.3) : Color.primary.opacity(0.08), lineWidth: 1)
+        )
+        .scaleEffect(isHovered ? 1.02 : 1)
+        .animation(.easeOut(duration: 0.15), value: isHovered)
+        .onHover { hovering in
+            isHovered = hovering
+        }
+    }
+
+    private var sceneNumber: String {
+        if let num = scene.value(forKey: "number") as? String, !num.isEmpty {
+            return num
+        }
+        return "—"
+    }
+
+    private var shotCount: Int {
+        if let shots = scene.value(forKey: "shots") as? NSSet {
+            return shots.count
+        }
+        return 0
+    }
+}
+
 // MARK: - Refined Scene Card (Matching App Style)
 struct RefinedSceneCard: View {
     let scene: NSManagedObject
@@ -1639,7 +1696,28 @@ struct RefinedShotCard: View {
 
     private let typeOptions = ["W", "MW", "LS", "MS", "MCU", "CU", "ECU", "OTS", "2S"]
     private let camOptions = ["A", "B", "C", "D", "E", "F", "G"]
-    private let lensOptions = ["12mm", "16mm", "24mm", "35mm", "50mm", "85mm", "135mm"]
+    private let lensOptions = [
+        // Ultra Wide Primes
+        "8mm", "10mm", "12mm", "14mm", "16mm", "18mm", "20mm", "21mm",
+        // Wide Primes
+        "24mm", "25mm", "27mm", "28mm", "29mm", "32mm", "35mm",
+        // Standard Primes
+        "40mm", "50mm", "55mm", "65mm",
+        // Portrait/Medium Telephoto Primes
+        "75mm", "85mm", "100mm", "135mm",
+        // Telephoto Primes
+        "150mm", "180mm", "200mm", "300mm",
+        // Common Zooms
+        "15-40mm", "17-35mm", "24-70mm", "24-105mm", "28-76mm", "45-250mm", "70-200mm", "70-300mm",
+        // Anamorphic (2x squeeze)
+        "25mm Anamorphic", "32mm Anamorphic", "40mm Anamorphic", "50mm Anamorphic", "65mm Anamorphic", "75mm Anamorphic", "100mm Anamorphic", "135mm Anamorphic",
+        // Macro
+        "50mm Macro", "100mm Macro",
+        // Specialty
+        "Fisheye", "Tilt-Shift", "Lensbaby", "Probe Lens",
+        // Custom option
+        "Custom"
+    ]
     private let rigOptions = ["Handheld", "Tripod", "Slider", "Gimbal", "Steadicam", "Dolly", "Jib", "Crane", "Drone"]
     private let colorOptions = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink", "Gray"]
 
@@ -2013,15 +2091,26 @@ struct RefinedShotCard: View {
         let onSelect: (String) -> Void
         @Environment(\.dismiss) var dismiss
         @State private var customText = ""
-        
+        @State private var showCustomField = false
+        @FocusState private var isCustomFieldFocused: Bool
+
+        // Filter out "Custom" from displayed options since we handle it specially
+        private var displayOptions: [String] {
+            options.filter { $0 != "Custom" }
+        }
+
+        private var hasCustomOption: Bool {
+            options.contains("Custom")
+        }
+
         var body: some View {
             VStack(spacing: 20) {
                 Text(title)
                     .font(.title3.weight(.semibold))
-                
+
                 ScrollView {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 12) {
-                        ForEach(options, id: \.self) { option in
+                        ForEach(displayOptions, id: \.self) { option in
                             Button(action: {
                                 onSelect(option)
                                 dismiss()
@@ -2045,22 +2134,71 @@ struct RefinedShotCard: View {
                             }
                             .buttonStyle(.plain)
                         }
+
+                        // Custom button that activates the text field
+                        if hasCustomOption {
+                            Button(action: {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    showCustomField = true
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    isCustomFieldFocused = true
+                                }
+                            }) {
+                                Text("Custom")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                            .fill(showCustomField ? Color.accentColor : Color.primary.opacity(0.06))
+                                    )
+                                    .foregroundStyle(showCustomField ? .white : .primary)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                            .strokeBorder(
+                                                showCustomField ? Color.clear : Color.primary.opacity(0.08),
+                                                lineWidth: 1
+                                            )
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
                 }
-                .frame(maxHeight: 200)
-                
-                HStack {
-                    TextField("Custom value", text: $customText)
-                        .textFieldStyle(.roundedBorder)
-                    
-                    Button("Add") {
-                        guard !customText.isEmpty else { return }
-                        onSelect(customText)
-                        dismiss()
+                .frame(maxHeight: 300)
+
+                // Custom value input section
+                if showCustomField || !hasCustomOption {
+                    VStack(alignment: .leading, spacing: 8) {
+                        if showCustomField {
+                            Text("Enter custom value:")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+                        HStack {
+                            TextField("Custom value", text: $customText)
+                                .textFieldStyle(.roundedBorder)
+                                .focused($isCustomFieldFocused)
+                                .onSubmit {
+                                    if !customText.isEmpty {
+                                        onSelect(customText)
+                                        dismiss()
+                                    }
+                                }
+
+                            Button("Add") {
+                                guard !customText.isEmpty else { return }
+                                onSelect(customText)
+                                dismiss()
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .disabled(customText.isEmpty)
+                        }
                     }
-                    .disabled(customText.isEmpty)
+                    .padding(.top, showCustomField ? 8 : 0)
                 }
-                
+
                 HStack {
                     Button("Cancel") {
                         dismiss()
@@ -2069,7 +2207,8 @@ struct RefinedShotCard: View {
                 }
             }
             .padding(24)
-            .frame(width: 400)
+            .frame(width: 500, height: showCustomField ? 480 : 420)
+            .animation(.easeInOut(duration: 0.2), value: showCustomField)
         }
     }
 

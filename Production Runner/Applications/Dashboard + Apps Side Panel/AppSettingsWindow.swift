@@ -117,11 +117,11 @@ struct AppSettingsWindow: View {
         VStack(spacing: 0) {
             // Minimalist Header
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text("Settings")
-                        .font(.system(size: 28, weight: .bold))
+                        .font(.system(size: 18, weight: .semibold))
                     Text("Configure your project")
-                        .font(.system(size: 13))
+                        .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -129,14 +129,15 @@ struct AppSettingsWindow: View {
                     dismiss()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 22))
+                        .font(.system(size: 18))
                         .foregroundStyle(.secondary)
                         .symbolRenderingMode(.hierarchical)
                 }
                 .buttonStyle(.plain)
                 .help(Tooltips.Settings.closeSettings)
             }
-            .padding(24)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 10)
             .background(Color.primary.opacity(0.02))
             
             Divider()
@@ -835,44 +836,50 @@ struct ProjectSettingsFullView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Navigation header with back button
-            HStack(spacing: 8) {
-                Button(action: onBack) {
-                    HStack(spacing: 3) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 11, weight: .semibold))
-                        Text("Back")
-                            .font(.system(size: 12, weight: .medium))
-                    }
-                    .foregroundColor(currentTheme.accentColor)
-                }
-                .buttonStyle(.plain)
-                .contentShape(Rectangle())
-
-                Spacer()
-
-                Text("Project Settings")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.primary)
-
-                Spacer()
-
-                // Spacer to balance the back button
-                Color.clear
-                    .frame(width: 50)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 6)
-            .background(Color.primary.opacity(0.02))
-
-            Divider()
-
-            // Embed the existing settings content
-            ProjectSettingsContent(project: project)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        ScrollView {
+            ProjectSettingsContent(project: project, onBack: onBack)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color(NSColor.windowBackgroundColor))
+    }
+}
+
+// MARK: - Project User Role
+enum ProjectUserRole: String, CaseIterable, Codable, Identifiable {
+    case admin = "Admin"
+    case viewer = "View Only"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .admin: return "person.badge.key"
+        case .viewer: return "eye"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .admin: return .orange
+        case .viewer: return .blue
+        }
+    }
+}
+
+// MARK: - Project User Model
+struct ProjectUser: Identifiable, Codable, Equatable {
+    let id: UUID
+    var name: String
+    var email: String
+    var role: ProjectUserRole
+    var dateAdded: Date
+
+    init(id: UUID = UUID(), name: String, email: String, role: ProjectUserRole = .viewer) {
+        self.id = id
+        self.name = name
+        self.email = email
+        self.role = role
+        self.dateAdded = Date()
     }
 }
 
@@ -880,8 +887,19 @@ struct ProjectSettingsFullView: View {
 /// The actual settings content, extracted to be reusable
 struct ProjectSettingsContent: View {
     let project: NSManagedObject
+    var onBack: (() -> Void)? = nil
 
     @Environment(\.managedObjectContext) private var moc
+    @AppStorage("app_theme") private var appTheme: String = "Standard"
+
+    @FetchRequest(
+        entity: NSEntityDescription.entity(forEntityName: "ContactEntity", in: PersistenceController.shared.container.viewContext)!,
+        sortDescriptors: [NSSortDescriptor(key: "name", ascending: true)]
+    ) private var contacts: FetchedResults<NSManagedObject>
+
+    private var currentTheme: AppAppearance.Theme {
+        AppAppearance.Theme(rawValue: appTheme) ?? .standard
+    }
 
     private func hasAttr(_ key: String) -> Bool { project.entity.attributesByName[key] != nil }
 
@@ -889,6 +907,12 @@ struct ProjectSettingsContent: View {
     @State private var isEditingName: Bool = false
     @State private var editProductionCompany: String = ""
     @State private var editStatus: ProjectStatus = .development
+    @State private var showTeamManagement: Bool = false
+    @State private var showAddUser: Bool = false
+    @State private var newUserName: String = ""
+    @State private var newUserEmail: String = ""
+    @State private var newUserRole: ProjectUserRole = .viewer
+    @AppStorage("project_users") private var projectUsersData: Data = Data()
 
     // Global Typeface Setting
     @AppStorage("global_typeface") private var globalTypeface: String = "SF Pro"
@@ -935,70 +959,371 @@ struct ProjectSettingsContent: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                // Project Title Section
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Project Title")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.secondary)
-
-                    TextField("Project Name", text: $editName)
-                        .textFieldStyle(.plain)
-                        .font(.system(size: 24, weight: .semibold))
-                        .padding(12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.primary.opacity(0.04))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
-                        )
-                        .onChange(of: editName) { _ in saveEdits() }
-                }
-
-                // Production Company Section
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Production Company")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.secondary)
-
-                    TextField("Company Name", text: $editProductionCompany)
-                        .textFieldStyle(.plain)
-                        .font(.system(size: 16))
-                        .padding(12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.primary.opacity(0.04))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
-                        )
-                        .onChange(of: editProductionCompany) { _ in saveEdits() }
-                }
-
-                // Status Section
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Project Status")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.secondary)
-
-                    Picker("Status", selection: $editStatus) {
-                        ForEach(ProjectStatus.allCases) { status in
-                            Text(status.rawValue.capitalized).tag(status)
+        VStack(alignment: .leading, spacing: 24) {
+            // Header with Back button and Title
+            HStack(spacing: 8) {
+                if let onBack = onBack {
+                    Button(action: onBack) {
+                        HStack(spacing: 3) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 11, weight: .semibold))
+                            Text("Back")
+                                .font(.system(size: 12, weight: .medium))
                         }
+                        .foregroundColor(currentTheme.accentColor)
                     }
-                    .pickerStyle(.segmented)
-                    .frame(maxWidth: 400)
-                    .onChange(of: editStatus) { _ in saveEdits() }
+                    .buttonStyle(.plain)
+                    .contentShape(Rectangle())
+                }
+
+                Spacer()
+
+                Text("Project Settings")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.primary)
+
+                Spacer()
+
+                // Balance the back button width
+                if onBack != nil {
+                    Color.clear.frame(width: 45)
                 }
             }
-            .padding(24)
-            .frame(maxWidth: .infinity, alignment: .leading)
+
+            // Project Title Section
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Project Title")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.secondary)
+
+                TextField("Project Name", text: $editName)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 24, weight: .semibold))
+                    .padding(12)
+                    .frame(maxWidth: 300)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.primary.opacity(0.04))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+                    )
+                    .onChange(of: editName) { _ in saveEdits() }
+            }
+
+            // Production Company Section
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Production Company")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.secondary)
+
+                TextField("Company Name", text: $editProductionCompany)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 16))
+                    .padding(12)
+                    .frame(maxWidth: 300)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.primary.opacity(0.04))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+                    )
+                    .onChange(of: editProductionCompany) { _ in saveEdits() }
+            }
+
+            // Status Section
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Project Status")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.secondary)
+
+                Picker("Status", selection: $editStatus) {
+                    ForEach(ProjectStatus.allCases) { status in
+                        Text(status.rawValue.capitalized).tag(status)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(maxWidth: 400)
+                .onChange(of: editStatus) { _ in saveEdits() }
+            }
+
+            Divider()
+                .padding(.vertical, 8)
+
+            // Users Section
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("Users")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button {
+                        showAddUser = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 12))
+                            Text("Add User")
+                                .font(.system(size: 12, weight: .medium))
+                        }
+                        .foregroundStyle(Color.accentColor)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                // Add User Form (inline)
+                if showAddUser {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Name")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                                TextField("Full Name", text: $newUserName)
+                                    .textFieldStyle(.plain)
+                                    .font(.system(size: 13))
+                                    .padding(8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .fill(Color.primary.opacity(0.04))
+                                    )
+                            }
+                            .frame(maxWidth: .infinity)
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Email")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                                TextField("email@example.com", text: $newUserEmail)
+                                    .textFieldStyle(.plain)
+                                    .font(.system(size: 13))
+                                    .padding(8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .fill(Color.primary.opacity(0.04))
+                                    )
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Role")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                                Picker("Role", selection: $newUserRole) {
+                                    ForEach(ProjectUserRole.allCases) { role in
+                                        HStack {
+                                            Image(systemName: role.icon)
+                                            Text(role.rawValue)
+                                        }
+                                        .tag(role)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+                                .frame(width: 200)
+                            }
+
+                            Spacer()
+
+                            HStack(spacing: 8) {
+                                Button("Cancel") {
+                                    withAnimation {
+                                        showAddUser = false
+                                        newUserName = ""
+                                        newUserEmail = ""
+                                        newUserRole = .viewer
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                                .foregroundStyle(.secondary)
+
+                                Button {
+                                    addUser()
+                                } label: {
+                                    Text("Add")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundStyle(.white)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 6)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .fill(newUserName.isEmpty || newUserEmail.isEmpty ? Color.gray : Color.accentColor)
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                                .disabled(newUserName.isEmpty || newUserEmail.isEmpty)
+                            }
+                        }
+                    }
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.accentColor.opacity(0.05))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(Color.accentColor.opacity(0.2), lineWidth: 1)
+                    )
+                }
+
+                // Users List
+                let users = loadUsers()
+                if users.isEmpty && !showAddUser {
+                    HStack(spacing: 8) {
+                        Image(systemName: "person.2.slash")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.tertiary)
+                        Text("No users added yet")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.primary.opacity(0.02))
+                    )
+                } else if !users.isEmpty {
+                    VStack(spacing: 6) {
+                        ForEach(users) { user in
+                            userRow(user: user)
+                        }
+                    }
+                }
+            }
+
         }
-        .frame(maxHeight: .infinity, alignment: .top)
+        .padding(24)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .onAppear { loadEdits() }
+    }
+
+    // MARK: - User Management Functions
+
+    private func loadUsers() -> [ProjectUser] {
+        guard !projectUsersData.isEmpty else { return [] }
+        return (try? JSONDecoder().decode([ProjectUser].self, from: projectUsersData)) ?? []
+    }
+
+    private func saveUsers(_ users: [ProjectUser]) {
+        if let encoded = try? JSONEncoder().encode(users) {
+            projectUsersData = encoded
+        }
+    }
+
+    private func addUser() {
+        guard !newUserName.isEmpty, !newUserEmail.isEmpty else { return }
+        var users = loadUsers()
+        let newUser = ProjectUser(name: newUserName, email: newUserEmail, role: newUserRole)
+        users.append(newUser)
+        saveUsers(users)
+
+        withAnimation {
+            showAddUser = false
+            newUserName = ""
+            newUserEmail = ""
+            newUserRole = .viewer
+        }
+    }
+
+    private func updateUserRole(_ user: ProjectUser, to newRole: ProjectUserRole) {
+        var users = loadUsers()
+        if let index = users.firstIndex(where: { $0.id == user.id }) {
+            users[index].role = newRole
+            saveUsers(users)
+        }
+    }
+
+    private func deleteUser(_ user: ProjectUser) {
+        var users = loadUsers()
+        users.removeAll { $0.id == user.id }
+        saveUsers(users)
+    }
+
+    private func userRow(user: ProjectUser) -> some View {
+        HStack(spacing: 10) {
+            // Avatar
+            ZStack {
+                Circle()
+                    .fill(user.role.color.opacity(0.2))
+                    .frame(width: 32, height: 32)
+                Text(initials(from: user.name))
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(user.role.color)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(user.name)
+                    .font(.system(size: 13, weight: .medium))
+                Text(user.email)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            // Role Picker
+            Menu {
+                ForEach(ProjectUserRole.allCases) { role in
+                    Button {
+                        updateUserRole(user, to: role)
+                    } label: {
+                        HStack {
+                            Image(systemName: role.icon)
+                            Text(role.rawValue)
+                            if user.role == role {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: user.role.icon)
+                        .font(.system(size: 10))
+                    Text(user.role.rawValue)
+                        .font(.system(size: 10, weight: .medium))
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 8))
+                }
+                .foregroundStyle(user.role.color)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule()
+                        .fill(user.role.color.opacity(0.1))
+                )
+            }
+            .buttonStyle(.plain)
+
+            // Delete Button
+            Button {
+                deleteUser(user)
+            } label: {
+                Image(systemName: "trash")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.red.opacity(0.7))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.primary.opacity(0.03))
+        )
+    }
+
+    private func initials(from name: String) -> String {
+        let components = name.split(separator: " ")
+        if components.count >= 2 {
+            return String(components[0].prefix(1)) + String(components[1].prefix(1))
+        } else if let first = components.first {
+            return String(first.prefix(2))
+        }
+        return "?"
     }
 }

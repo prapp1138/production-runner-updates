@@ -117,6 +117,10 @@ final class ScreenplayBreakdownSync {
                 let scriptText = self.extractSceneText(from: document, sceneIndex: scene.index)
                 self.setIfExists(sceneEntity, key: "scriptText", value: scriptText)
 
+                // Generate and set scriptFDX for Script Preview in Breakdowns
+                let scriptFDX = self.generateFDXFromScene(document: document, sceneIndex: scene.index, sceneNumber: scene.number)
+                self.setIfExists(sceneEntity, key: "scriptFDX", value: scriptFDX)
+
                 // Set project relationship
                 if let rel = sceneEntity.entity.relationshipsByName["project"] {
                     sceneEntity.setValue(project, forKey: rel.name)
@@ -467,6 +471,89 @@ final class ScreenplayBreakdownSync {
         }
 
         return text
+    }
+
+    /// Generate FDX XML content from a ScreenplayDocument scene for Script Preview
+    private func generateFDXFromScene(document: ScreenplayDocument, sceneIndex: Int, sceneNumber: String) -> String {
+        var paragraphs: [String] = []
+
+        // Start from the scene heading at sceneIndex
+        var currentIndex = sceneIndex
+
+        while currentIndex < document.elements.count {
+            let element = document.elements[currentIndex]
+
+            // Stop at the next scene heading (unless it's the first one)
+            if currentIndex > sceneIndex && element.type == .sceneHeading {
+                break
+            }
+
+            // Convert element to FDX paragraph XML
+            let fdxType = fdxParagraphType(for: element.type)
+            let escapedText = escapeXML(element.displayText)
+
+            // Add scene number for scene headings
+            if element.type == .sceneHeading {
+                paragraphs.append("""
+    <Paragraph Type="\(fdxType)" Number="\(sceneNumber)">
+      <SceneProperties Length="1" Page="1"/>
+      <Text>\(escapedText)</Text>
+    </Paragraph>
+""")
+            } else {
+                paragraphs.append("""
+    <Paragraph Type="\(fdxType)">
+      <Text>\(escapedText)</Text>
+    </Paragraph>
+""")
+            }
+
+            currentIndex += 1
+        }
+
+        // Wrap in minimal FDX structure
+        let fdx = """
+<?xml version="1.0" encoding="UTF-8"?>
+<FinalDraft DocumentType="Script" Template="No" Version="1">
+  <Content>
+    \(paragraphs.joined(separator: "\n    "))
+  </Content>
+</FinalDraft>
+"""
+        return fdx
+    }
+
+    /// Map ScriptElementType to FDX paragraph type names
+    private func fdxParagraphType(for elementType: ScriptElementType) -> String {
+        switch elementType {
+        case .sceneHeading:
+            return "Scene Heading"
+        case .action:
+            return "Action"
+        case .character:
+            return "Character"
+        case .dialogue:
+            return "Dialogue"
+        case .parenthetical:
+            return "Parenthetical"
+        case .transition:
+            return "Transition"
+        case .shot:
+            return "Shot"
+        case .general:
+            return "General"
+        case .titlePage:
+            return "General"  // Title page elements are rare in scene content
+        }
+    }
+
+    /// Escape special XML characters
+    private func escapeXML(_ text: String) -> String {
+        text.replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: "<", with: "&lt;")
+            .replacingOccurrences(of: ">", with: "&gt;")
+            .replacingOccurrences(of: "\"", with: "&quot;")
+            .replacingOccurrences(of: "'", with: "&apos;")
     }
 
     // MARK: - Errors

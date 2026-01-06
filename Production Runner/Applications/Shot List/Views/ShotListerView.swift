@@ -292,7 +292,10 @@ struct ShotListerView: View {
             // Main content area
             HSplitView {
                 // Left: Scenes sidebar with modern styling (hidden in Storyboard view)
-                if selectedView != .storyboard {
+                if selectedView == .topDown {
+                    compactSceneSidebar
+                        .frame(width: 80)
+                } else if selectedView != .storyboard {
                     sceneSidebar
                         .frame(minWidth: 280, idealWidth: sidebarWidth, maxWidth: 420)
                 }
@@ -317,7 +320,8 @@ struct ShotListerView: View {
                             zoomLevel: $storyboardZoomLevel
                         )
                     case .topDown:
-                        TopDownShotPlanner(selectedScene: selectedScene)
+                        TopDownShotPlanner(selectedScene: selectedScene, selectedCamera: selectedCamera)
+                            .id(selectedScene?.objectID)
                     }
                 }
                 .frame(minWidth: 600, maxWidth: .infinity, maxHeight: .infinity)
@@ -482,7 +486,46 @@ struct ShotListerView: View {
         .onAppear { reload() }
         .onChange(of: projectID) { _ in reload() }
     }
-    
+
+    // MARK: - Compact Scene Sidebar (For Top Down View)
+    private var compactSceneSidebar: some View {
+        VStack(spacing: 0) {
+            // Compact header
+            Text("Sc")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(themedSecondaryTextColor)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(sidebarHeaderBackground)
+
+            Divider()
+
+            // Compact scene list
+            ScrollView {
+                LazyVStack(spacing: 4) {
+                    ForEach(scenes, id: \.objectID) { scene in
+                        CompactSceneCard(
+                            scene: scene,
+                            isSelected: selectedScene?.objectID == scene.objectID,
+                            accentColor: themedAccentColor,
+                            textColor: themedTextColor,
+                            secondaryTextColor: themedSecondaryTextColor
+                        )
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selectedScene = scene
+                            }
+                        }
+                    }
+                }
+                .padding(6)
+            }
+            .scrollContentBackground(.hidden)
+        }
+        .background(themedSidebarBackground)
+    }
+
     @ViewBuilder
     private var shotDetailPane: some View {
         if let scene = selectedScene {
@@ -537,12 +580,27 @@ struct ShotListerView: View {
                     .foregroundStyle(themedSecondaryTextColor)
 
                 Menu {
-                    Button("2.39:1 (Anamorphic)") { aspectRatio = "2.39:1" }
-                    Button("2.35:1 (CinemaScope)") { aspectRatio = "2.35:1" }
-                    Button("1.85:1 (Flat)") { aspectRatio = "1.85:1" }
-                    Button("16:9 (1.78:1)") { aspectRatio = "16:9" }
-                    Button("4:3 (1.33:1)") { aspectRatio = "4:3" }
-                    Button("1:1 (Square)") { aspectRatio = "1:1" }
+                    Section("Widescreen Cinema") {
+                        Button("2.76:1 (Ultra Panavision 70)") { aspectRatio = "2.76:1" }
+                        Button("2.39:1 (Anamorphic)") { aspectRatio = "2.39:1" }
+                        Button("2.35:1 (CinemaScope)") { aspectRatio = "2.35:1" }
+                        Button("2:1 (Univisium)") { aspectRatio = "2:1" }
+                        Button("1.85:1 (Flat)") { aspectRatio = "1.85:1" }
+                    }
+                    Section("IMAX") {
+                        Button("1.90:1 (IMAX Digital)") { aspectRatio = "1.90:1" }
+                        Button("1.43:1 (IMAX 70mm)") { aspectRatio = "1.43:1" }
+                    }
+                    Section("Standard") {
+                        Button("16:9 (1.78:1)") { aspectRatio = "16:9" }
+                        Button("4:3 (1.33:1)") { aspectRatio = "4:3" }
+                        Button("1:1 (Square)") { aspectRatio = "1:1" }
+                    }
+                    Section("Vertical / Mobile") {
+                        Button("9:16 (Vertical)") { aspectRatio = "9:16" }
+                        Button("4:5 (Instagram Portrait)") { aspectRatio = "4:5" }
+                        Button("2:3 (Photo Portrait)") { aspectRatio = "2:3" }
+                    }
                 } label: {
                     HStack(spacing: 4) {
                         Text(aspectRatio)
@@ -692,13 +750,163 @@ struct ShotListerView: View {
                     .foregroundStyle(themedSecondaryTextColor)
 
                 Menu {
+                    // ZEISS
                     Section("Zeiss") {
                         Button("Zeiss Supreme Primes") { selectedLensPackage = "Zeiss Supreme Primes" }
                         Button("Zeiss Master Primes") { selectedLensPackage = "Zeiss Master Primes" }
+                        Button("Zeiss Master Anamorphic") { selectedLensPackage = "Zeiss Master Anamorphic" }
+                        Button("Zeiss CP.3") { selectedLensPackage = "Zeiss CP.3" }
+                        Button("Zeiss CP.3 XD") { selectedLensPackage = "Zeiss CP.3 XD" }
+                        Button("Zeiss Nano Primes") { selectedLensPackage = "Zeiss Nano Primes" }
+                        Button("Zeiss Standard Primes") { selectedLensPackage = "Zeiss Standard Primes" }
+                        Button("Zeiss Ultra Primes") { selectedLensPackage = "Zeiss Ultra Primes" }
                     }
+                    // COOKE
                     Section("Cooke") {
                         Button("Cooke S4/i") { selectedLensPackage = "Cooke S4/i" }
+                        Button("Cooke S5/i") { selectedLensPackage = "Cooke S5/i" }
                         Button("Cooke S7/i") { selectedLensPackage = "Cooke S7/i" }
+                        Button("Cooke S8/i") { selectedLensPackage = "Cooke S8/i" }
+                        Button("Cooke Panchro/i Classic") { selectedLensPackage = "Cooke Panchro/i Classic" }
+                        Button("Cooke Anamorphic/i") { selectedLensPackage = "Cooke Anamorphic/i" }
+                        Button("Cooke Anamorphic/i SF") { selectedLensPackage = "Cooke Anamorphic/i SF" }
+                        Button("Cooke Anamorphic/i Full Frame+") { selectedLensPackage = "Cooke Anamorphic/i Full Frame+" }
+                        Button("Cooke SP3") { selectedLensPackage = "Cooke SP3" }
+                        Button("Cooke miniS4/i") { selectedLensPackage = "Cooke miniS4/i" }
+                    }
+                    // ARRI
+                    Section("ARRI") {
+                        Button("ARRI Signature Primes") { selectedLensPackage = "ARRI Signature Primes" }
+                        Button("ARRI Signature Zooms") { selectedLensPackage = "ARRI Signature Zooms" }
+                        Button("ARRI Master Primes") { selectedLensPackage = "ARRI Master Primes" }
+                        Button("ARRI Master Anamorphic") { selectedLensPackage = "ARRI Master Anamorphic" }
+                        Button("ARRI Ultra Primes") { selectedLensPackage = "ARRI Ultra Primes" }
+                        Button("ARRI/Zeiss Ultra Wide Zoom") { selectedLensPackage = "ARRI/Zeiss Ultra Wide Zoom" }
+                        Button("ARRI/Zeiss Lightweight Zoom") { selectedLensPackage = "ARRI/Zeiss Lightweight Zoom" }
+                        Button("ARRI/Fujinon Alura Zooms") { selectedLensPackage = "ARRI/Fujinon Alura Zooms" }
+                    }
+                    // PANAVISION
+                    Section("Panavision") {
+                        Button("Panavision Primo 70") { selectedLensPackage = "Panavision Primo 70" }
+                        Button("Panavision Primo Primes") { selectedLensPackage = "Panavision Primo Primes" }
+                        Button("Panavision Primo Artiste") { selectedLensPackage = "Panavision Primo Artiste" }
+                        Button("Panavision Ultra Vista") { selectedLensPackage = "Panavision Ultra Vista" }
+                        Button("Panavision G Series Anamorphic") { selectedLensPackage = "Panavision G Series Anamorphic" }
+                        Button("Panavision T Series Anamorphic") { selectedLensPackage = "Panavision T Series Anamorphic" }
+                        Button("Panavision C Series Anamorphic") { selectedLensPackage = "Panavision C Series Anamorphic" }
+                        Button("Panavision E Series Anamorphic") { selectedLensPackage = "Panavision E Series Anamorphic" }
+                        Button("Panavision Ultra Panatar") { selectedLensPackage = "Panavision Ultra Panatar" }
+                        Button("Panavision Sphero 65") { selectedLensPackage = "Panavision Sphero 65" }
+                        Button("Panavision Super Speed Z") { selectedLensPackage = "Panavision Super Speed Z" }
+                        Button("Panavision PVintage") { selectedLensPackage = "Panavision PVintage" }
+                        Button("Panavision H Series") { selectedLensPackage = "Panavision H Series" }
+                    }
+                    // LEICA
+                    Section("Leica") {
+                        Button("Leica Summicron-C") { selectedLensPackage = "Leica Summicron-C" }
+                        Button("Leica Summilux-C") { selectedLensPackage = "Leica Summilux-C" }
+                        Button("Leica Thalia") { selectedLensPackage = "Leica Thalia" }
+                        Button("Leica M 0.8") { selectedLensPackage = "Leica M 0.8" }
+                        Button("Leitz Prime") { selectedLensPackage = "Leitz Prime" }
+                        Button("Leitz Zoom") { selectedLensPackage = "Leitz Zoom" }
+                        Button("Leitz HUGO") { selectedLensPackage = "Leitz HUGO" }
+                    }
+                    // SIGMA
+                    Section("Sigma") {
+                        Button("Sigma Cine FF High Speed Primes") { selectedLensPackage = "Sigma Cine FF High Speed Primes" }
+                        Button("Sigma Cine FF Classic Primes") { selectedLensPackage = "Sigma Cine FF Classic Primes" }
+                        Button("Sigma Cine Zooms") { selectedLensPackage = "Sigma Cine Zooms" }
+                    }
+                    // CANON
+                    Section("Canon") {
+                        Button("Canon Sumire Primes") { selectedLensPackage = "Canon Sumire Primes" }
+                        Button("Canon CN-E Primes") { selectedLensPackage = "Canon CN-E Primes" }
+                        Button("Canon CN-E Zooms") { selectedLensPackage = "Canon CN-E Zooms" }
+                        Button("Canon K35") { selectedLensPackage = "Canon K35" }
+                        Button("Canon Flex Zoom") { selectedLensPackage = "Canon Flex Zoom" }
+                    }
+                    // SONY
+                    Section("Sony") {
+                        Button("Sony CineAlta 4K Primes") { selectedLensPackage = "Sony CineAlta 4K Primes" }
+                        Button("Sony CineAlta 4K Zooms") { selectedLensPackage = "Sony CineAlta 4K Zooms" }
+                        Button("Sony G Master Primes") { selectedLensPackage = "Sony G Master Primes" }
+                    }
+                    // TOKINA
+                    Section("Tokina") {
+                        Button("Tokina Vista Primes") { selectedLensPackage = "Tokina Vista Primes" }
+                        Button("Tokina Vista One") { selectedLensPackage = "Tokina Vista One" }
+                        Button("Tokina Cinema ATX Zooms") { selectedLensPackage = "Tokina Cinema ATX Zooms" }
+                    }
+                    // ANGENIEUX
+                    Section("Angénieux") {
+                        Button("Angénieux Optimo Primes") { selectedLensPackage = "Angénieux Optimo Primes" }
+                        Button("Angénieux Optimo Ultra 12x") { selectedLensPackage = "Angénieux Optimo Ultra 12x" }
+                        Button("Angénieux Optimo Ultra Compact") { selectedLensPackage = "Angénieux Optimo Ultra Compact" }
+                        Button("Angénieux EZ Zooms") { selectedLensPackage = "Angénieux EZ Zooms" }
+                        Button("Angénieux Type EZ") { selectedLensPackage = "Angénieux Type EZ" }
+                    }
+                    // FUJINON
+                    Section("Fujinon") {
+                        Button("Fujinon Premista Zooms") { selectedLensPackage = "Fujinon Premista Zooms" }
+                        Button("Fujinon Cabrio Zooms") { selectedLensPackage = "Fujinon Cabrio Zooms" }
+                        Button("Fujinon XK Zooms") { selectedLensPackage = "Fujinon XK Zooms" }
+                        Button("Fujinon MK Zooms") { selectedLensPackage = "Fujinon MK Zooms" }
+                    }
+                    // ANAMORPHIC SPECIALTY
+                    Section("Anamorphic Specialty") {
+                        Button("Atlas Orion Anamorphic") { selectedLensPackage = "Atlas Orion Anamorphic" }
+                        Button("Atlas Mercury Anamorphic") { selectedLensPackage = "Atlas Mercury Anamorphic" }
+                        Button("Hawk V-Lite Anamorphic") { selectedLensPackage = "Hawk V-Lite Anamorphic" }
+                        Button("Hawk V-Plus Anamorphic") { selectedLensPackage = "Hawk V-Plus Anamorphic" }
+                        Button("Hawk C-Series Anamorphic") { selectedLensPackage = "Hawk C-Series Anamorphic" }
+                        Button("Hawk V-Lite 1.3x Anamorphic") { selectedLensPackage = "Hawk V-Lite 1.3x Anamorphic" }
+                        Button("Kowa Anamorphic") { selectedLensPackage = "Kowa Anamorphic" }
+                        Button("Lomo Anamorphic") { selectedLensPackage = "Lomo Anamorphic" }
+                        Button("SLR Magic Anamorphot") { selectedLensPackage = "SLR Magic Anamorphot" }
+                        Button("Sirui Anamorphic") { selectedLensPackage = "Sirui Anamorphic" }
+                        Button("Vazen Anamorphic") { selectedLensPackage = "Vazen Anamorphic" }
+                        Button("DZOFilm Pictor Anamorphic") { selectedLensPackage = "DZOFilm Pictor Anamorphic" }
+                        Button("Great Joy Anamorphic") { selectedLensPackage = "Great Joy Anamorphic" }
+                    }
+                    // VINTAGE / REHOUSED
+                    Section("Vintage / Rehoused") {
+                        Button("Bausch & Lomb Super Baltar") { selectedLensPackage = "Bausch & Lomb Super Baltar" }
+                        Button("Lomo Round Front Anamorphic") { selectedLensPackage = "Lomo Round Front Anamorphic" }
+                        Button("Lomo Standard Speeds") { selectedLensPackage = "Lomo Standard Speeds" }
+                        Button("Helios 44") { selectedLensPackage = "Helios 44" }
+                        Button("Kowa Cine Prominar") { selectedLensPackage = "Kowa Cine Prominar" }
+                        Button("Cooke Speed Panchro") { selectedLensPackage = "Cooke Speed Panchro" }
+                        Button("Canon FD (Rehoused)") { selectedLensPackage = "Canon FD (Rehoused)" }
+                        Button("Canon K35 (Rehoused)") { selectedLensPackage = "Canon K35 (Rehoused)" }
+                        Button("Zeiss Contax (Rehoused)") { selectedLensPackage = "Zeiss Contax (Rehoused)" }
+                        Button("Zeiss Super Speeds") { selectedLensPackage = "Zeiss Super Speeds" }
+                        Button("Xeen CF") { selectedLensPackage = "Xeen CF" }
+                        Button("TLS Morpheus") { selectedLensPackage = "TLS Morpheus" }
+                        Button("TLS Kowa Evolution") { selectedLensPackage = "TLS Kowa Evolution" }
+                        Button("GL Optics Rehoused") { selectedLensPackage = "GL Optics Rehoused" }
+                        Button("Zero Optik Rehoused") { selectedLensPackage = "Zero Optik Rehoused" }
+                        Button("P+S Technik Rehoused") { selectedLensPackage = "P+S Technik Rehoused" }
+                    }
+                    // MODERN PRIMES
+                    Section("Modern Primes") {
+                        Button("XEEN Meister Primes") { selectedLensPackage = "XEEN Meister Primes" }
+                        Button("DZOFilm Vespid Primes") { selectedLensPackage = "DZOFilm Vespid Primes" }
+                        Button("Meike Cine Primes") { selectedLensPackage = "Meike Cine Primes" }
+                        Button("Meike Full Frame Primes") { selectedLensPackage = "Meike Full Frame Primes" }
+                        Button("Viltrox Cine Primes") { selectedLensPackage = "Viltrox Cine Primes" }
+                        Button("Laowa Ranger Zooms") { selectedLensPackage = "Laowa Ranger Zooms" }
+                        Button("Laowa OOOM Zooms") { selectedLensPackage = "Laowa OOOM Zooms" }
+                        Button("NiSi Athena Primes") { selectedLensPackage = "NiSi Athena Primes" }
+                        Button("7Artisans Cine Primes") { selectedLensPackage = "7Artisans Cine Primes" }
+                    }
+                    // SPECIALTY / MACRO / PROBE
+                    Section("Specialty") {
+                        Button("Laowa Probe Lens") { selectedLensPackage = "Laowa Probe Lens" }
+                        Button("Laowa Periprobe") { selectedLensPackage = "Laowa Periprobe" }
+                        Button("Innovision Probe II+") { selectedLensPackage = "Innovision Probe II+" }
+                        Button("Arri Macro") { selectedLensPackage = "Arri Macro" }
+                        Button("Zeiss DigiPrime") { selectedLensPackage = "Zeiss DigiPrime" }
+                        Button("Lensbaby (Various)") { selectedLensPackage = "Lensbaby (Various)" }
                     }
                 } label: {
                     HStack(spacing: 4) {

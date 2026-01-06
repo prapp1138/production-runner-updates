@@ -88,15 +88,11 @@ struct MainDashboardViewiOS: View {
         let total = entityCount("LocationEntity")
         var toScout = 0
         var scouted = 0
-        
+
+        // Use Bool 'scouted' field from Core Data model
         toScout = entityCount("LocationEntity", predicate: NSPredicate(format: "scouted == NO"))
         scouted = entityCount("LocationEntity", predicate: NSPredicate(format: "scouted == YES"))
-        
-        if toScout == 0 && scouted == 0 {
-            toScout = entityCount("LocationEntity", predicate: NSPredicate(format: "status == %@", "to_scout"))
-            scouted = entityCount("LocationEntity", predicate: NSPredicate(format: "status == %@", "scouted"))
-        }
-        
+
         return (total, toScout, scouted)
     }
 

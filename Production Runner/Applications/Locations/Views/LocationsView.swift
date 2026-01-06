@@ -4,6 +4,7 @@ import PDFKit
 import MapKit
 import Contacts
 import WebKit
+import CoreData
 
 struct ParkingMapAnnotation: Codable, Hashable, Identifiable {
     let id: UUID
@@ -57,6 +58,7 @@ struct LocationItem: Identifiable, Hashable, Codable {
     var updatedAt: Date
     var createdBy: String
     var lastModifiedBy: String
+    var sortOrder: Int32
 
     init(
         id: UUID = UUID(),
@@ -85,7 +87,8 @@ struct LocationItem: Identifiable, Hashable, Codable {
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
         createdBy: String = "",
-        lastModifiedBy: String = ""
+        lastModifiedBy: String = "",
+        sortOrder: Int32 = 0
     ) {
         self.id = id
         self.name = name
@@ -114,6 +117,7 @@ struct LocationItem: Identifiable, Hashable, Codable {
         self.updatedAt = updatedAt
         self.createdBy = createdBy
         self.lastModifiedBy = lastModifiedBy
+        self.sortOrder = sortOrder
     }
 }
 
@@ -139,6 +143,9 @@ final class AddressAutocomplete: NSObject, ObservableObject, MKLocalSearchComple
 }
 
 struct LocationsView: View {
+    // MARK: - Environment
+    @Environment(\.managedObjectContext) private var viewContext
+
     // MARK: - State
     enum MapProvider: String {
         case apple
@@ -320,6 +327,39 @@ struct LocationsView: View {
             performPasteCommand()
         }
         #endif
+        .onAppear {
+            configureLocationManager()
+        }
+    }
+
+    // MARK: - Core Data Configuration
+
+    /// Configure the LocationDataManager with the current Core Data context
+    private func configureLocationManager() {
+        // Get the project from the context
+        guard !locationManager.isConfigured else { return }
+
+        // Make sure the persistent store coordinator has stores loaded
+        guard let coordinator = viewContext.persistentStoreCoordinator,
+              !coordinator.persistentStores.isEmpty else {
+            print("📍 Locations: Waiting for Core Data store to load...")
+            return
+        }
+
+        // Fetch the current project
+        let request = NSFetchRequest<NSManagedObject>(entityName: "ProjectEntity")
+        request.fetchLimit = 1
+
+        do {
+            if let project = try viewContext.fetch(request).first {
+                locationManager.configure(context: viewContext, projectID: project.objectID)
+                print("📍 Locations: Configured with project \(project.objectID)")
+            } else {
+                print("📍 Locations: No project found in store")
+            }
+        } catch {
+            print("❌ Failed to fetch project for Locations: \(error)")
+        }
     }
 
     // MARK: - Undo/Redo Functions
@@ -410,167 +450,202 @@ struct LocationsView: View {
     // MARK: - Subviews
     private var leftPane: some View {
         VStack(spacing: 0) {
-            // Modern Header with Search and Actions
-            VStack(spacing: 12) {
-                HStack(spacing: 12) {
-                    // Search Bar
-                    HStack(spacing: 10) {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.secondary)
-                            .font(.body)
-                        TextField("Search locations...", text: $searchText)
-                            .textFieldStyle(.plain)
-                        if !searchText.isEmpty {
-                            Button(action: { searchText = "" }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.secondary)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(.quaternary.opacity(0.5))
-                    .cornerRadius(8)
-
-                    Spacer()
-
-                    HStack(spacing: 8) {
-                        Button(action: addLocation) {
-                            Label("Add", systemImage: "plus")
-                                .font(.subheadline.weight(.medium))
-                        }
-                        .buttonStyle(ModernActionButtonStyle(color: .blue))
-                        .customTooltip("Add Location")
-
-                        Button(action: deleteSelected) {
-                            Image(systemName: "trash")
-                                .font(.subheadline)
-                        }
-                        .buttonStyle(ModernActionButtonStyle(color: .red, isDestructive: true))
-                        .disabled(selectedIDs.isEmpty)
-                        .opacity(selectedIDs.isEmpty ? 0.5 : 1.0)
-                        .customTooltip(selectedIDs.count > 1 ? "Delete \(selectedIDs.count) Selected" : "Delete Selected")
-                    }
-                }
-
-                // Feature toolbar
-                HStack(spacing: 6) {
-                    Button { showAllLocationsMap = true } label: {
-                        Label("Map", systemImage: "map")
-                            .font(.caption)
-                    }
-                    .buttonStyle(FeatureToolbarButtonStyle())
-                    .customTooltip("View All Locations on Map")
-
-                    Button { showRoutePlanning = true } label: {
-                        Label("Route", systemImage: "point.topleft.down.curvedto.point.bottomright.up")
-                            .font(.caption)
-                    }
-                    .buttonStyle(FeatureToolbarButtonStyle())
-                    .customTooltip("Plan Route Between Locations")
-
-                    Menu {
-                        Button {
-                            selectedFolderID = nil
-                        } label: {
-                            HStack {
-                                Label("All Locations", systemImage: "square.grid.2x2")
-                                if selectedFolderID == nil {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-
-                        Divider()
-
-                        ForEach(locationManager.folders) { folder in
-                            Button {
-                                selectedFolderID = folder.id
-                            } label: {
-                                HStack {
-                                    Label(folder.name, systemImage: folder.iconName)
-                                    if selectedFolderID == folder.id {
-                                        Image(systemName: "checkmark")
-                                    }
-                                }
-                            }
-                        }
-
-                        Divider()
-
-                        Button {
-                            showFolderManagement = true
-                        } label: {
-                            Label("Manage Folders...", systemImage: "folder.badge.gearshape")
-                        }
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: selectedFolderID == nil ? "folder" : "folder.fill")
-                            Text(selectedFolderID == nil ? "All" : (locationManager.folders.first(where: { $0.id == selectedFolderID })?.name ?? "Folder"))
-                            Image(systemName: "chevron.down")
-                                .font(.caption2)
-                        }
-                        .font(.caption)
-                    }
-                    .buttonStyle(FeatureToolbarButtonStyle())
-                    .customTooltip("Filter by Folder")
-
-                    Button { showAdvancedFilter = true } label: {
-                        Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
-                            .font(.caption)
-                    }
-                    .buttonStyle(FeatureToolbarButtonStyle())
-                    .customTooltip("Advanced Filters")
-
-                    Spacer()
-
-                    Menu {
-                        Button { showExportView = true } label: {
-                            Label("Export Locations...", systemImage: "square.and.arrow.up")
-                        }
-                        Button { showImportView = true } label: {
-                            Label("Import Locations...", systemImage: "square.and.arrow.down")
-                        }
-                        Divider()
-                        Button {
-                            locationManager.syncToiCloud()
-                        } label: {
-                            Label("Sync to iCloud", systemImage: "icloud.and.arrow.up")
-                        }
-                        Button {
-                            locationManager.syncFromiCloud()
-                        } label: {
-                            Label("Sync from iCloud", systemImage: "icloud.and.arrow.down")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .font(.body)
-                    }
-                    .menuStyle(.borderlessButton)
-                    .frame(width: 28)
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-            .background(.ultraThinMaterial)
-
-            // Modern List
-            ScrollView {
-                LazyVStack(spacing: 8) {
-                    ForEach(filteredLocations) { loc in
-                        LocationCard(
-                            location: loc,
-                            isSelected: selectedIDs.contains(loc.id),
-                            action: { handleLocationSelection(loc.id) }
-                        )
-                    }
-                }
-                .padding(.horizontal, 12)
-                .padding(.bottom, 12)
-            }
+            leftPaneHeader
+            Divider().opacity(0.5)
+            leftPaneLocationCount
+            leftPaneLocationList
         }
         .background(cardBackgroundColor)
+    }
+
+    private var leftPaneHeader: some View {
+        VStack(spacing: 10) {
+            leftPaneSearchRow
+            leftPaneToolbarRow
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color.primary.opacity(0.02))
+    }
+
+    private var leftPaneSearchRow: some View {
+        HStack(spacing: 10) {
+            // Search Bar
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                    .font(.system(size: 12, weight: .medium))
+                TextField("Search locations...", text: $searchText)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 12))
+                if !searchText.isEmpty {
+                    Button(action: { searchText = "" }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(Color.primary.opacity(0.04))
+            .cornerRadius(8)
+
+            // Add button
+            Button(action: addLocation) {
+                Image(systemName: "plus")
+                    .font(.system(size: 12, weight: .semibold))
+            }
+            .buttonStyle(CompactToolbarButtonStyle(color: .accentColor))
+            .customTooltip("Add Location")
+
+            // Delete button
+            Button(action: deleteSelected) {
+                Image(systemName: "trash")
+                    .font(.system(size: 11, weight: .medium))
+            }
+            .buttonStyle(CompactToolbarButtonStyle(color: .red))
+            .disabled(selectedIDs.isEmpty)
+            .opacity(selectedIDs.isEmpty ? 0.4 : 1.0)
+            .customTooltip(selectedIDs.count > 1 ? "Delete \(selectedIDs.count) Selected" : "Delete Selected")
+        }
+    }
+
+    private var leftPaneToolbarRow: some View {
+        HStack(spacing: 4) {
+            Button { showAllLocationsMap = true } label: {
+                Label("Map", systemImage: "map")
+                    .font(.system(size: 10, weight: .medium))
+            }
+            .buttonStyle(CompactFeatureButtonStyle())
+            .customTooltip("View All Locations on Map")
+
+            Button { showRoutePlanning = true } label: {
+                Label("Route", systemImage: "point.topleft.down.curvedto.point.bottomright.up")
+                    .font(.system(size: 10, weight: .medium))
+            }
+            .buttonStyle(CompactFeatureButtonStyle())
+            .customTooltip("Plan Route Between Locations")
+
+            leftPaneFolderMenu
+
+            Button { showAdvancedFilter = true } label: {
+                Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
+                    .font(.system(size: 10, weight: .medium))
+            }
+            .buttonStyle(CompactFeatureButtonStyle())
+            .customTooltip("Advanced Filters")
+
+            Spacer()
+
+            leftPaneMoreMenu
+        }
+    }
+
+    private var leftPaneFolderMenu: some View {
+        Menu {
+            Button {
+                selectedFolderID = nil
+            } label: {
+                HStack {
+                    Label("All Locations", systemImage: "square.grid.2x2")
+                    if selectedFolderID == nil {
+                        Image(systemName: "checkmark")
+                    }
+                }
+            }
+
+            Divider()
+
+            ForEach(locationManager.folders) { folder in
+                Button {
+                    selectedFolderID = folder.id
+                } label: {
+                    HStack {
+                        Label(folder.name, systemImage: folder.iconName)
+                        if selectedFolderID == folder.id {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+
+            Divider()
+
+            Button {
+                showFolderManagement = true
+            } label: {
+                Label("Manage Folders...", systemImage: "folder.badge.gearshape")
+            }
+        } label: {
+            HStack(spacing: 3) {
+                Image(systemName: selectedFolderID == nil ? "folder" : "folder.fill")
+                    .font(.system(size: 10))
+                Text(folderMenuLabel)
+                    .font(.system(size: 10, weight: .medium))
+                    .lineLimit(1)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 8, weight: .semibold))
+            }
+        }
+        .buttonStyle(CompactFeatureButtonStyle())
+        .customTooltip("Filter by Folder")
+    }
+
+    private var folderMenuLabel: String {
+        if selectedFolderID == nil {
+            return "All"
+        }
+        return locationManager.folders.first(where: { $0.id == selectedFolderID })?.name ?? "Folder"
+    }
+
+    private var leftPaneMoreMenu: some View {
+        Menu {
+            Button { showExportView = true } label: {
+                Label("Export Locations...", systemImage: "square.and.arrow.up")
+            }
+            Button { showImportView = true } label: {
+                Label("Import Locations...", systemImage: "square.and.arrow.down")
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .font(.system(size: 13))
+                .foregroundColor(.secondary)
+        }
+        .menuStyle(.borderlessButton)
+        .frame(width: 24)
+    }
+
+    @ViewBuilder
+    private var leftPaneLocationCount: some View {
+        if !filteredLocations.isEmpty {
+            HStack {
+                Text("\(filteredLocations.count) location\(filteredLocations.count == 1 ? "" : "s")")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
+            .background(Color.primary.opacity(0.015))
+        }
+    }
+
+    private var leftPaneLocationList: some View {
+        ScrollView {
+            LazyVStack(spacing: 6) {
+                ForEach(filteredLocations) { loc in
+                    LocationCard(
+                        location: loc,
+                        isSelected: selectedIDs.contains(loc.id),
+                        action: { handleLocationSelection(loc.id) }
+                    )
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+        }
     }
 
     private var rightPane: some View {
@@ -593,22 +668,35 @@ struct LocationsView: View {
     }
     
     private var emptyStateView: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             ZStack {
                 Circle()
-                    .fill(.blue.opacity(0.1))
-                    .frame(width: 100, height: 100)
-                Image(systemName: "map.circle.fill")
-                    .font(.system(size: 50))
-                    .foregroundStyle(.blue.gradient)
+                    .fill(Color.accentColor.opacity(0.08))
+                    .frame(width: 80, height: 80)
+                Image(systemName: "mappin.circle")
+                    .font(.system(size: 36, weight: .light))
+                    .foregroundStyle(Color.accentColor.opacity(0.6))
             }
-            VStack(spacing: 6) {
+
+            VStack(spacing: 8) {
                 Text("No Location Selected")
-                    .font(.title3.bold())
-                Text("Select a location from the list to view details")
-                    .font(.subheadline)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.primary.opacity(0.8))
+
+                Text("Select a location from the list\nto view and edit details")
+                    .font(.system(size: 13))
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
+                    .lineSpacing(2)
+            }
+
+            if locationManager.locations.isEmpty {
+                Button(action: addLocation) {
+                    Label("Add Your First Location", systemImage: "plus.circle.fill")
+                        .font(.system(size: 13, weight: .medium))
+                }
+                .buttonStyle(ModernActionButtonStyle(color: .accentColor))
+                .padding(.top, 8)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -673,33 +761,37 @@ struct LocationsView: View {
     private func detailsForm(_ loc: Binding<LocationItem>) -> some View {
         VStack(spacing: 0) {
             // Toolbar with view switcher
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 // View mode picker
-                HStack(spacing: 2) {
+                HStack(spacing: 1) {
                     ForEach(LocationViewMode.allCases, id: \.self) { mode in
                         Button {
-                            withAnimation(.easeInOut(duration: 0.15)) {
+                            withAnimation(.easeInOut(duration: 0.12)) {
                                 currentViewMode = mode
                             }
                         } label: {
                             HStack(spacing: 4) {
                                 Image(systemName: mode.icon)
-                                    .font(.system(size: 11, weight: .medium))
+                                    .font(.system(size: 10, weight: .medium))
                                 Text(mode.rawValue)
-                                    .font(.system(size: 11, weight: .medium))
+                                    .font(.system(size: 10, weight: .medium))
                             }
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
-                            .background(currentViewMode == mode ? Color.primary.opacity(0.1) : Color.clear)
-                            .cornerRadius(5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                    .fill(currentViewMode == mode ? Color.primary.opacity(0.08) : Color.clear)
+                            )
                             .foregroundStyle(currentViewMode == mode ? .primary : .secondary)
                         }
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(3)
-                .background(Color.primary.opacity(0.04))
-                .cornerRadius(7)
+                .padding(2)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(Color.primary.opacity(0.03))
+                )
 
                 Spacer()
 
@@ -708,57 +800,88 @@ struct LocationsView: View {
                     isSearching.toggle()
                 } label: {
                     Image(systemName: "magnifyingglass")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 26, height: 26)
+                        .background(
+                            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                .fill(Color.primary.opacity(0.04))
+                        )
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
                 .popover(isPresented: $isSearching) {
                     addressSearchPopover(loc)
                 }
 
                 PermitStatusBadge(status: loc.wrappedValue.permitStatus)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(Color.primary.opacity(0.02))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(Color.primary.opacity(0.015))
 
             Divider()
+                .opacity(0.5)
 
             // Content based on view mode
             if currentViewMode == .details {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        // Header with location name and favorite toggle
-                        HStack {
+                    VStack(alignment: .leading, spacing: 14) {
+                        // Header with location name and controls
+                        HStack(spacing: 12) {
                             Image(systemName: "mappin.circle.fill")
-                                .font(.title2)
-                                .foregroundStyle(.blue.gradient)
+                                .font(.system(size: 22))
+                                .foregroundStyle(Color.accentColor.gradient)
+
                             Text(loc.wrappedValue.name)
-                                .font(.title3.bold())
+                                .font(.system(size: 16, weight: .semibold))
+                                .lineLimit(1)
+
                             Spacer()
 
-                            // Priority picker
-                            Picker("Priority", selection: loc.priority) {
+                            // Priority picker (compact)
+                            Menu {
                                 ForEach(1...5, id: \.self) { priority in
-                                    HStack {
-                                        ForEach(0..<priority, id: \.self) { _ in
-                                            Image(systemName: "star.fill")
-                                                .font(.caption2)
+                                    Button {
+                                        loc.priority.wrappedValue = priority
+                                    } label: {
+                                        HStack {
+                                            Text("Priority \(priority)")
+                                            if loc.wrappedValue.priority == priority {
+                                                Image(systemName: "checkmark")
+                                            }
                                         }
-                                    }.tag(priority)
+                                    }
                                 }
+                            } label: {
+                                HStack(spacing: 3) {
+                                    ForEach(0..<(6 - loc.wrappedValue.priority), id: \.self) { _ in
+                                        Image(systemName: "star.fill")
+                                            .font(.system(size: 8))
+                                    }
+                                }
+                                .foregroundColor(.orange)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 5)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                        .fill(Color.orange.opacity(0.1))
+                                )
                             }
-                            .labelsHidden()
-                            .pickerStyle(.menu)
-                            .frame(width: 80)
+                            .menuStyle(.borderlessButton)
+                            .frame(width: 60)
 
                             // Favorite toggle
                             Button {
                                 loc.isFavorite.wrappedValue.toggle()
                             } label: {
                                 Image(systemName: loc.wrappedValue.isFavorite ? "star.fill" : "star")
-                                    .font(.title3)
+                                    .font(.system(size: 14))
                                     .foregroundColor(loc.wrappedValue.isFavorite ? .yellow : .secondary)
+                                    .frame(width: 28, height: 28)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                            .fill(loc.wrappedValue.isFavorite ? Color.yellow.opacity(0.15) : Color.primary.opacity(0.04))
+                                    )
                             }
                             .buttonStyle(.plain)
                             .customTooltip(loc.wrappedValue.isFavorite ? "Remove from Favorites" : "Add to Favorites")
@@ -779,15 +902,20 @@ struct LocationsView: View {
                                     }
                                 }
                             } label: {
-                                Image(systemName: "folder")
-                                    .font(.body)
+                                Image(systemName: loc.wrappedValue.folderID != nil ? "folder.fill" : "folder")
+                                    .font(.system(size: 12))
                                     .foregroundColor(.secondary)
+                                    .frame(width: 28, height: 28)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                            .fill(Color.primary.opacity(0.04))
+                                    )
                             }
                             .menuStyle(.borderlessButton)
-                            .frame(width: 24)
+                            .frame(width: 28)
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 16)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 14)
 
                         // Location Photos Section (storyboard-style inline viewer)
                         locationPhotosSection(loc)
@@ -1092,71 +1220,78 @@ struct LocationsView: View {
     private func locationPhotosSection(_ loc: Binding<LocationItem>) -> some View {
         VStack(spacing: 0) {
             // Photos toolbar header
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 Image(systemName: "photo.on.rectangle.fill")
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(.blue.gradient)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.accentColor)
                 Text("Location Photos")
-                    .font(.headline)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.primary.opacity(0.85))
+
+                if !loc.imageDatas.wrappedValue.isEmpty {
+                    Text("\(loc.imageDatas.wrappedValue.count)")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.primary.opacity(0.06))
+                        .cornerRadius(4)
+                }
 
                 Spacer()
 
-                // Only show controls when photos exist
+                // Zoom controls (only when photos exist)
                 if !loc.imageDatas.wrappedValue.isEmpty {
-                    // Zoom controls
-                    HStack(spacing: 8) {
+                    HStack(spacing: 6) {
                         Button {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 photoZoomLevel = max(minPhotoZoom, photoZoomLevel - 0.25)
                             }
                         } label: {
-                            Image(systemName: "minus.magnifyingglass")
-                                .font(.system(size: 11, weight: .medium))
+                            Image(systemName: "minus")
+                                .font(.system(size: 10, weight: .semibold))
                         }
                         .buttonStyle(.plain)
-                        .foregroundStyle(photoZoomLevel > minPhotoZoom ? Color.secondary : Color.secondary.opacity(0.5))
+                        .foregroundStyle(photoZoomLevel > minPhotoZoom ? Color.secondary : Color.secondary.opacity(0.4))
                         .disabled(photoZoomLevel <= minPhotoZoom)
 
                         Text("\(Int(photoZoomLevel * 100))%")
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(.secondary)
-                            .frame(minWidth: 40)
+                            .frame(minWidth: 36)
 
                         Button {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 photoZoomLevel = min(maxPhotoZoom, photoZoomLevel + 0.25)
                             }
                         } label: {
-                            Image(systemName: "plus.magnifyingglass")
-                                .font(.system(size: 11, weight: .medium))
+                            Image(systemName: "plus")
+                                .font(.system(size: 10, weight: .semibold))
                         }
                         .buttonStyle(.plain)
-                        .foregroundStyle(photoZoomLevel < maxPhotoZoom ? Color.secondary : Color.secondary.opacity(0.5))
+                        .foregroundStyle(photoZoomLevel < maxPhotoZoom ? Color.secondary : Color.secondary.opacity(0.4))
                         .disabled(photoZoomLevel >= maxPhotoZoom)
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
                     .background(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        RoundedRectangle(cornerRadius: 5, style: .continuous)
                             .fill(Color.primary.opacity(0.04))
                     )
-
-                    Divider()
-                        .frame(height: 20)
                 }
 
                 Button {
                     importTargetID = loc.wrappedValue.id
                     isImportingImages = true
                 } label: {
-                    Label("Add Photos", systemImage: "plus.circle.fill")
-                        .font(.subheadline.weight(.medium))
+                    Label("Add", systemImage: "plus")
+                        .font(.system(size: 11, weight: .medium))
                 }
-                .buttonStyle(ModernSecondaryButtonStyle())
+                .buttonStyle(CompactFeatureButtonStyle())
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(Color.primary.opacity(0.03))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(Color.primary.opacity(0.02))
 
             Divider()
 
@@ -1773,82 +1908,112 @@ struct LocationCard: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: 14) {
+                // Status indicator circle with icon
                 ZStack {
                     Circle()
-                        .fill(isSelected ? Color.blue.gradient : statusColor.opacity(0.2).gradient)
-                        .frame(width: 44, height: 44)
+                        .fill(isSelected ? Color.accentColor.gradient : statusColor.opacity(0.15).gradient)
+                        .frame(width: 42, height: 42)
+
                     Image(systemName: location.isFavorite ? "star.circle.fill" : "mappin.circle.fill")
-                        .font(.title3)
+                        .font(.system(size: 20, weight: .medium))
                         .foregroundColor(isSelected ? .white : (location.isFavorite ? .yellow : statusColor))
                 }
 
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
+                VStack(alignment: .leading, spacing: 3) {
+                    // Name row
+                    HStack(spacing: 5) {
                         Text(location.name)
-                            .font(.body.weight(.semibold))
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.primary)
                             .lineLimit(1)
+
                         if location.isFavorite {
                             Image(systemName: "star.fill")
-                                .font(.caption2)
+                                .font(.system(size: 9))
                                 .foregroundColor(.yellow)
                         }
                     }
+
+                    // Address row
                     if !location.address.isEmpty {
                         Text(location.address)
-                            .font(.caption)
+                            .font(.system(size: 11))
                             .foregroundColor(.secondary)
                             .lineLimit(1)
                     }
-                    // Status and meta info
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(statusColor)
-                            .frame(width: 6, height: 6)
-                        Text(location.permitStatus)
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        if location.scouted {
-                            Text("• Scouted")
-                                .font(.caption2)
-                                .foregroundColor(.green)
+
+                    // Status metadata row
+                    HStack(spacing: 8) {
+                        // Status pill
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(statusColor)
+                                .frame(width: 5, height: 5)
+                            Text(location.permitStatus)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(statusColor)
                         }
-                        if location.dateToScout != nil {
-                            Text("• \(location.dateToScout!.formatted(date: .abbreviated, time: .omitted))")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(statusColor.opacity(0.1))
+                        .cornerRadius(4)
+
+                        if location.scouted {
+                            HStack(spacing: 3) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 9))
+                                Text("Scouted")
+                                    .font(.system(size: 10, weight: .medium))
+                            }
+                            .foregroundColor(.green)
+                        }
+
+                        if let scoutDate = location.dateToScout {
+                            HStack(spacing: 3) {
+                                Image(systemName: "calendar")
+                                    .font(.system(size: 9))
+                                Text(scoutDate.formatted(date: .abbreviated, time: .omitted))
+                                    .font(.system(size: 10))
+                            }
+                            .foregroundColor(.secondary)
                         }
                     }
                 }
 
-                Spacer()
+                Spacer(minLength: 8)
 
-                VStack(spacing: 4) {
+                // Right side indicators
+                VStack(alignment: .trailing, spacing: 6) {
                     if isSelected {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.title3)
-                            .foregroundColor(.blue)
+                            .font(.system(size: 16))
+                            .foregroundColor(.accentColor)
                     }
-                    // Priority stars
-                    if location.priority <= 3 {
-                        HStack(spacing: 1) {
-                            ForEach(0..<(6 - location.priority), id: \.self) { _ in
+
+                    // Priority stars (only show for high priority)
+                    if location.priority <= 2 {
+                        HStack(spacing: 2) {
+                            ForEach(0..<(4 - location.priority), id: \.self) { _ in
                                 Image(systemName: "star.fill")
-                                    .font(.system(size: 6))
+                                    .font(.system(size: 7))
                                     .foregroundColor(.orange)
                             }
                         }
                     }
                 }
             }
-            .padding(12)
-            .background(isSelected ? Color.blue.opacity(0.08) : Color.primary.opacity(0.03))
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? Color.blue.opacity(0.3) : Color.clear, lineWidth: 1.5)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(isSelected ? Color.accentColor.opacity(0.08) : Color.primary.opacity(0.02))
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(isSelected ? Color.accentColor.opacity(0.25) : Color.primary.opacity(0.06), lineWidth: 1)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 10))
         }
         .buttonStyle(.plain)
     }
@@ -1858,26 +2023,34 @@ struct ModernCard<Content: View>: View {
     let title: String
     let icon: String
     let content: Content
-    
+
     init(title: String, icon: String, @ViewBuilder content: () -> Content) {
         self.title = title
         self.icon = icon
         self.content = content()
     }
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Label(title, systemImage: icon)
-                .font(.headline)
-                .foregroundStyle(.blue.gradient)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.accentColor)
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.primary.opacity(0.85))
+            }
+
             content
         }
-        .padding(16)
-        .background(Color.primary.opacity(0.03))
-        .cornerRadius(14)
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.primary.opacity(0.02))
+        )
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
         )
         .padding(.horizontal, 16)
     }
@@ -1910,18 +2083,25 @@ struct CompactField: View {
     @Binding var text: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 3) {
             Text(label)
-                .font(.system(size: 9, weight: .medium))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(.secondary.opacity(0.8))
                 .textCase(.uppercase)
+                .tracking(0.3)
             TextField(label, text: $text)
-                .font(.system(size: 12))
+                .font(.system(size: 11))
                 .textFieldStyle(.plain)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 4)
-                .background(Color.primary.opacity(0.04))
-                .cornerRadius(4)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(Color.primary.opacity(0.03))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+                )
         }
     }
 }
@@ -1929,50 +2109,63 @@ struct CompactField: View {
 struct ModernTextFieldStyle: TextFieldStyle {
     func _body(configuration: TextField<Self._Label>) -> some View {
         configuration
-            .padding(10)
-            .background(Color.primary.opacity(0.05))
-            .cornerRadius(8)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.primary.opacity(0.04))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+            )
     }
 }
 
 struct ModernActionButtonStyle: ButtonStyle {
     let color: Color
     var isDestructive: Bool = false
-    
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(configuration.isPressed ? color.opacity(0.15) : color.opacity(0.1))
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(color.opacity(configuration.isPressed ? 0.18 : 0.12))
+            )
             .foregroundColor(isDestructive ? .red : color)
-            .cornerRadius(8)
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 
 struct ModernIconButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .padding(10)
-            .background(Color.blue.opacity(configuration.isPressed ? 0.15 : 0.1))
-            .foregroundColor(.blue)
-            .cornerRadius(8)
+            .padding(9)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.accentColor.opacity(configuration.isPressed ? 0.18 : 0.1))
+            )
+            .foregroundColor(.accentColor)
             .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 
 struct ModernSecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .padding(.vertical, 10)
-            .padding(.horizontal, 16)
-            .background(Color.blue.opacity(configuration.isPressed ? 0.15 : 0.1))
-            .foregroundColor(.blue)
-            .cornerRadius(10)
+            .padding(.vertical, 8)
+            .padding(.horizontal, 14)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(Color.accentColor.opacity(configuration.isPressed ? 0.15 : 0.1))
+            )
+            .foregroundColor(.accentColor)
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 
@@ -1989,9 +2182,40 @@ struct FeatureToolbarButtonStyle: ButtonStyle {
     }
 }
 
+struct CompactToolbarButtonStyle: ButtonStyle {
+    let color: Color
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .frame(width: 28, height: 28)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(color.opacity(configuration.isPressed ? 0.2 : 0.1))
+            )
+            .foregroundColor(color)
+            .scaleEffect(configuration.isPressed ? 0.92 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+    }
+}
+
+struct CompactFeatureButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background(
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(Color.primary.opacity(configuration.isPressed ? 0.08 : 0.04))
+            )
+            .foregroundColor(.secondary)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(.easeInOut(duration: 0.08), value: configuration.isPressed)
+    }
+}
+
 struct PermitStatusBadge: View {
     let status: String
-    
+
     var statusColor: Color {
         switch status {
         case "Approved": return .green
@@ -2000,19 +2224,25 @@ struct PermitStatusBadge: View {
         default: return .blue
         }
     }
-    
+
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 5) {
             Circle()
                 .fill(statusColor)
-                .frame(width: 8, height: 8)
+                .frame(width: 6, height: 6)
             Text(status)
-                .font(.caption.weight(.medium))
+                .font(.system(size: 11, weight: .medium))
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
-        .background(statusColor.opacity(0.15))
-        .cornerRadius(8)
+        .background(
+            Capsule()
+                .fill(statusColor.opacity(0.12))
+        )
+        .overlay(
+            Capsule()
+                .stroke(statusColor.opacity(0.2), lineWidth: 0.5)
+        )
     }
 }
 

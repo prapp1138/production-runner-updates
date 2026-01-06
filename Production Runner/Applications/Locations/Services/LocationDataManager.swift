@@ -1,12 +1,21 @@
+//
+//  LocationDataManager.swift
+//  Production Runner
+//
+//  Location data manager - Core Data backed
+//  Stores location data in project .runner files via Core Data
+//
+
 import SwiftUI
 import UniformTypeIdentifiers
 import CoreData
+import MapKit
 #if canImport(AppKit)
 import AppKit
 #endif
 
 /// Singleton manager for storing and accessing location data across the application
-/// Supports file-based storage, iCloud sync, import/export functionality
+/// Uses Core Data for persistence within project files
 class LocationDataManager: ObservableObject {
     static let shared = LocationDataManager()
 
@@ -28,29 +37,11 @@ class LocationDataManager: ObservableObject {
     @Published var filterOptions: LocationFilterOptions = LocationFilterOptions()
     @Published var isSyncing: Bool = false
     @Published var lastSyncDate: Date?
+    @Published var isConfigured: Bool = false
 
-    // MARK: - File URLs
-    private var appSupportFolder: URL {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let appFolder = appSupport.appendingPathComponent("M42.Production-Central/Locations", isDirectory: true)
-        try? FileManager.default.createDirectory(at: appFolder, withIntermediateDirectories: true, attributes: nil)
-        return appFolder
-    }
-
-    private var locationsFileURL: URL { appSupportFolder.appendingPathComponent("locations.json") }
-    private var foldersFileURL: URL { appSupportFolder.appendingPathComponent("folders.json") }
-    private var commentsFileURL: URL { appSupportFolder.appendingPathComponent("comments.json") }
-    private var documentsFileURL: URL { appSupportFolder.appendingPathComponent("documents.json") }
-    private var activityLogFileURL: URL { appSupportFolder.appendingPathComponent("activity_log.json") }
-    private var assignmentsFileURL: URL { appSupportFolder.appendingPathComponent("assignments.json") }
-    private var approvalsFileURL: URL { appSupportFolder.appendingPathComponent("approvals.json") }
-    private var photoTagsFileURL: URL { appSupportFolder.appendingPathComponent("photo_tags.json") }
-
-    // iCloud container URL
-    private var iCloudContainerURL: URL? {
-        FileManager.default.url(forUbiquityContainerIdentifier: nil)?
-            .appendingPathComponent("Documents/Locations", isDirectory: true)
-    }
+    // MARK: - Core Data Context
+    private var context: NSManagedObjectContext?
+    private var projectID: NSManagedObjectID?
 
     // Current user name (for activity tracking)
     private var currentUserName: String {
@@ -61,31 +52,43 @@ class LocationDataManager: ObservableObject {
         #endif
     }
 
+    // MARK: - Legacy File URLs (for migration only)
+    private var legacyAppSupportFolder: URL {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        return appSupport.appendingPathComponent("M42.Production-Central/Locations", isDirectory: true)
+    }
+
+    private var legacyLocationsFileURL: URL { legacyAppSupportFolder.appendingPathComponent("locations.json") }
+    private var legacyFoldersFileURL: URL { legacyAppSupportFolder.appendingPathComponent("folders.json") }
+
     // MARK: - Initialization
     private init() {
-        migrateFromUserDefaults()
-        loadAllData()
-
-        // Initialize with sample data if empty
-        if locations.isEmpty {
-            initializeSampleData()
-        }
-
-        // Initialize default folders if empty
-        if folders.isEmpty {
-            initializeDefaultFolders()
-        }
-
-        // Initialize default photo tags if empty
-        if photoTags.isEmpty {
-            initializeDefaultPhotoTags()
-        }
-
-        // Setup iCloud sync observer
-        setupiCloudObserver()
-
-        // Listen for project switch notifications to clear data for new projects
+        // Listen for project switch notifications
         setupProjectSwitchObserver()
+    }
+
+    // MARK: - Core Data Configuration
+
+    /// Configure the manager with a Core Data context and project
+    /// Call this when opening a project to enable Core Data persistence
+    func configure(context: NSManagedObjectContext, projectID: NSManagedObjectID) {
+        print("📍 LocationDataManager: Starting configuration...")
+
+        self.context = context
+        self.projectID = projectID
+        self.isConfigured = true
+
+        print("📍 LocationDataManager: Context and projectID set")
+
+        // Check for legacy JSON data to migrate
+        // Disabled temporarily for debugging
+        // checkAndMigrateLegacyData()
+
+        // Load all data from Core Data
+        print("📍 LocationDataManager: Loading data from Core Data...")
+        loadAllDataFromCoreData()
+
+        print("📍 LocationDataManager: Configuration complete")
     }
 
     // MARK: - Project Switch Observer
@@ -102,6 +105,9 @@ class LocationDataManager: ObservableObject {
     private func handleProjectSwitch() {
         print("📍 LocationDataManager: Received pr.storeDidSwitch notification")
         clearAllData()
+        context = nil
+        projectID = nil
+        isConfigured = false
     }
 
     // MARK: - Clear All Data (for new projects)
@@ -117,161 +123,616 @@ class LocationDataManager: ObservableObject {
         photoTags = []
         filterOptions = LocationFilterOptions()
 
-        // Save empty data to files
-        saveLocations()
-        saveFolders()
-        saveComments()
-        saveDocuments()
-        saveActivityLog()
-        saveAssignments()
-        saveApprovals()
-        savePhotoTags()
-
-        // Re-initialize default folders and photo tags for the new project
-        initializeDefaultFolders()
-        initializeDefaultPhotoTags()
-
         print("📍 LocationDataManager: Cleared all data for new project")
     }
 
-    // MARK: - Sample Data
-    private func initializeSampleData() {
-        locations = [
-            LocationItem(name: "Riverside Park", address: "123 River Rd", contact: "Parks Office", phone: "(313) 555-0142", email: "permits@city.org", permitStatus: "Pending"),
-            LocationItem(name: "Old Mill", address: "45 Foundry Ln", contact: "Site Manager", phone: "(313) 555-0178", email: "mill@historic.org", permitStatus: "Approved"),
-            LocationItem(name: "Downtown Alley", address: "218 3rd St", contact: "Business Assoc.", phone: "(313) 555-0111", email: "permits@downtown.org", permitStatus: "Needs Scout")
-        ]
-        saveLocations()
+    // MARK: - Load Data from Core Data
+
+    private func loadAllDataFromCoreData() {
+        loadLocationsFromCoreData()
+        loadFoldersFromCoreData()
+        loadCommentsFromCoreData()
+        loadDocumentsFromCoreData()
+        loadAssignmentsFromCoreData()
+        loadApprovalsFromCoreData()
+        // Activity log and photo tags are stored as JSON within entities
     }
 
-    private func initializeDefaultFolders() {
-        folders = [
-            LocationFolder(name: "All Locations", colorHex: "#007AFF", iconName: "mappin.circle.fill", sortOrder: 0),
-            LocationFolder(name: "Favorites", colorHex: "#FF9500", iconName: "star.fill", sortOrder: 1),
-            LocationFolder(name: "Pending Approval", colorHex: "#FF3B30", iconName: "clock.fill", sortOrder: 2),
-            LocationFolder(name: "Approved", colorHex: "#34C759", iconName: "checkmark.circle.fill", sortOrder: 3)
-        ]
-        saveFolders()
+    private func loadLocationsFromCoreData() {
+        guard let context = context, let projectID = projectID else { return }
+
+        let request = NSFetchRequest<NSManagedObject>(entityName: "LocationEntity")
+        request.predicate = NSPredicate(format: "project == %@", projectID)
+        request.sortDescriptors = [NSSortDescriptor(key: "sortOrder", ascending: true)]
+
+        do {
+            let entities = try context.fetch(request)
+            locations = entities.compactMap { locationItemFromEntity($0) }
+            print("📍 Loaded \(locations.count) locations from Core Data")
+        } catch {
+            print("❌ Failed to fetch locations: \(error)")
+        }
     }
 
-    private func initializeDefaultPhotoTags() {
-        photoTags = [
-            PhotoTag(name: "Hero Shot", colorHex: "#FF9500"),
-            PhotoTag(name: "Reference", colorHex: "#007AFF"),
-            PhotoTag(name: "Problem Area", colorHex: "#FF3B30"),
-            PhotoTag(name: "Power Source", colorHex: "#FFCC00"),
-            PhotoTag(name: "Parking", colorHex: "#34C759"),
-            PhotoTag(name: "Crew Area", colorHex: "#5856D6")
-        ]
-        savePhotoTags()
+    private func loadFoldersFromCoreData() {
+        guard let context = context, let projectID = projectID else { return }
+
+        let request = NSFetchRequest<NSManagedObject>(entityName: "LocationFolderEntity")
+        request.predicate = NSPredicate(format: "project == %@", projectID)
+        request.sortDescriptors = [NSSortDescriptor(key: "sortOrder", ascending: true)]
+
+        do {
+            let entities = try context.fetch(request)
+            folders = entities.compactMap { folderFromEntity($0) }
+            print("📍 Loaded \(folders.count) folders from Core Data")
+        } catch {
+            print("❌ Failed to fetch folders: \(error)")
+        }
+    }
+
+    private func loadCommentsFromCoreData() {
+        guard let context = context, let projectID = projectID else { return }
+
+        let request = NSFetchRequest<NSManagedObject>(entityName: "LocationCommentEntity")
+        // Filter to only comments for locations in this project
+        request.predicate = NSPredicate(format: "location.project == %@", projectID)
+        request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
+
+        do {
+            let entities = try context.fetch(request)
+            comments = entities.compactMap { commentFromEntity($0) }
+            print("📍 Loaded \(comments.count) comments from Core Data")
+        } catch {
+            print("❌ Failed to fetch comments: \(error)")
+        }
+    }
+
+    private func loadDocumentsFromCoreData() {
+        guard let context = context, let projectID = projectID else { return }
+
+        let request = NSFetchRequest<NSManagedObject>(entityName: "LocationDocumentEntity")
+        // Filter to only documents for locations in this project
+        request.predicate = NSPredicate(format: "location.project == %@", projectID)
+        request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
+
+        do {
+            let entities = try context.fetch(request)
+            documents = entities.compactMap { documentFromEntity($0) }
+            print("📍 Loaded \(documents.count) documents from Core Data")
+        } catch {
+            print("❌ Failed to fetch documents: \(error)")
+        }
+    }
+
+    private func loadAssignmentsFromCoreData() {
+        guard let context = context, let projectID = projectID else { return }
+
+        let request = NSFetchRequest<NSManagedObject>(entityName: "LocationAssignmentEntity")
+        // Filter to only assignments for locations in this project
+        request.predicate = NSPredicate(format: "location.project == %@", projectID)
+        request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
+
+        do {
+            let entities = try context.fetch(request)
+            assignments = entities.compactMap { assignmentFromEntity($0) }
+            print("📍 Loaded \(assignments.count) assignments from Core Data")
+        } catch {
+            print("❌ Failed to fetch assignments: \(error)")
+        }
+    }
+
+    private func loadApprovalsFromCoreData() {
+        guard let context = context, let projectID = projectID else { return }
+
+        let request = NSFetchRequest<NSManagedObject>(entityName: "LocationApprovalEntity")
+        // Filter to only approvals for locations in this project
+        request.predicate = NSPredicate(format: "location.project == %@", projectID)
+        request.sortDescriptors = [NSSortDescriptor(key: "sortOrder", ascending: true)]
+
+        do {
+            let entities = try context.fetch(request)
+            approvals = entities.compactMap { approvalFromEntity($0) }
+            print("📍 Loaded \(approvals.count) approvals from Core Data")
+        } catch {
+            print("❌ Failed to fetch approvals: \(error)")
+        }
+    }
+
+    // MARK: - Entity to Struct Conversions
+
+    private func locationItemFromEntity(_ entity: NSManagedObject) -> LocationItem? {
+        // Skip deleted entities
+        guard !entity.isDeleted else { return nil }
+
+        guard let id = entity.value(forKey: "id") as? UUID,
+              let name = entity.value(forKey: "name") as? String else {
+            return nil
+        }
+
+        // Decode photos from relationship - filter out deleted entities
+        var photos: [LocationPhoto] = []
+        if let photoSet = entity.value(forKey: "photos") as? Set<NSManagedObject> {
+            photos = photoSet
+                .filter { !$0.isDeleted }
+                .compactMap { photoFromEntity($0) }
+                .sorted { $0.addedAt < $1.addedAt }
+        }
+
+        // Decode availability windows from relationship - filter out deleted entities
+        var availabilityWindows: [AvailabilityWindow] = []
+        if let availSet = entity.value(forKey: "availabilityWindows") as? Set<NSManagedObject> {
+            availabilityWindows = availSet
+                .filter { !$0.isDeleted }
+                .compactMap { availabilityFromEntity($0) }
+        }
+
+        // Decode parking annotations from JSON
+        var parkingAnnotations: [ParkingMapAnnotation] = []
+        if let annotationsJSON = entity.value(forKey: "parkingMapAnnotationsJSON") as? String,
+           let data = annotationsJSON.data(using: .utf8) {
+            parkingAnnotations = (try? JSONDecoder().decode([ParkingMapAnnotation].self, from: data)) ?? []
+        }
+
+        // Decode tag IDs from JSON
+        var tagIDs: [UUID] = []
+        if let tagIDsJSON = entity.value(forKey: "tagIDsJSON") as? String,
+           let data = tagIDsJSON.data(using: .utf8) {
+            tagIDs = (try? JSONDecoder().decode([UUID].self, from: data)) ?? []
+        }
+
+        // Decode weather from JSON
+        var scoutWeather: LocationWeather?
+        if let weatherJSON = entity.value(forKey: "scoutWeatherJSON") as? String,
+           let data = weatherJSON.data(using: .utf8) {
+            scoutWeather = try? JSONDecoder().decode(LocationWeather.self, from: data)
+        }
+
+        let latitude = entity.value(forKey: "latitude") as? Double
+        let longitude = entity.value(forKey: "longitude") as? Double
+
+        return LocationItem(
+            id: id,
+            name: name,
+            address: entity.value(forKey: "address") as? String ?? "",
+            locationInFilm: entity.value(forKey: "locationInFilm") as? String ?? "",
+            contact: entity.value(forKey: "contact") as? String ?? "",
+            phone: entity.value(forKey: "phone") as? String ?? "",
+            email: entity.value(forKey: "email") as? String ?? "",
+            permitStatus: entity.value(forKey: "permitStatus") as? String ?? "Pending",
+            notes: entity.value(forKey: "notes") as? String ?? "",
+            dateToScout: entity.value(forKey: "dateToScout") as? Date,
+            scouted: entity.value(forKey: "scouted") as? Bool ?? false,
+            latitude: latitude != 0 ? latitude : nil,
+            longitude: longitude != 0 ? longitude : nil,
+            imageDatas: [],  // Legacy field, use photos instead
+            parkingMapImageData: entity.value(forKey: "parkingMapImageData") as? Data,
+            parkingMapAnnotations: parkingAnnotations,
+            folderID: (entity.value(forKey: "folder") as? NSManagedObject)?.value(forKey: "id") as? UUID,
+            isFavorite: entity.value(forKey: "isFavorite") as? Bool ?? false,
+            priority: Int(entity.value(forKey: "priority") as? Int16 ?? 0),
+            photos: photos,
+            tagIDs: tagIDs,
+            availabilityWindows: availabilityWindows,
+            scoutWeather: scoutWeather,
+            createdAt: entity.value(forKey: "createdAt") as? Date ?? Date(),
+            updatedAt: entity.value(forKey: "updatedAt") as? Date ?? Date(),
+            createdBy: entity.value(forKey: "createdBy") as? String ?? "",
+            lastModifiedBy: entity.value(forKey: "lastModifiedBy") as? String ?? "",
+            sortOrder: entity.value(forKey: "sortOrder") as? Int32 ?? 0
+        )
+    }
+
+    private func photoFromEntity(_ entity: NSManagedObject) -> LocationPhoto? {
+        // Skip deleted entities
+        guard !entity.isDeleted else { return nil }
+
+        guard let id = entity.value(forKey: "id") as? UUID else {
+            return nil
+        }
+
+        // Allow photos without image data (might be loading external storage)
+        let imageData = entity.value(forKey: "imageData") as? Data ?? Data()
+
+        let categoryString = entity.value(forKey: "category") as? String ?? "Other"
+        let category = LocationPhoto.PhotoCategory(rawValue: categoryString) ?? .other
+
+        // Decode annotations from JSON
+        var annotations: [PhotoAnnotation] = []
+        if let annotationsJSON = entity.value(forKey: "annotationsJSON") as? String,
+           let data = annotationsJSON.data(using: .utf8) {
+            annotations = (try? JSONDecoder().decode([PhotoAnnotation].self, from: data)) ?? []
+        }
+
+        return LocationPhoto(
+            id: id,
+            imageData: imageData,
+            thumbnailData: entity.value(forKey: "thumbnailData") as? Data,
+            category: category,
+            tagIDs: [],
+            caption: entity.value(forKey: "caption") as? String ?? "",
+            takenAt: nil,
+            addedAt: entity.value(forKey: "createdAt") as? Date ?? Date(),
+            annotations: annotations
+        )
+    }
+
+    private func availabilityFromEntity(_ entity: NSManagedObject) -> AvailabilityWindow? {
+        // Skip deleted entities
+        guard !entity.isDeleted else { return nil }
+
+        guard let id = entity.value(forKey: "id") as? UUID,
+              let startDate = entity.value(forKey: "startDate") as? Date,
+              let endDate = entity.value(forKey: "endDate") as? Date else {
+            return nil
+        }
+
+        return AvailabilityWindow(
+            id: id,
+            startDate: startDate,
+            endDate: endDate,
+            isAvailable: !(entity.value(forKey: "isBlocked") as? Bool ?? false),
+            notes: entity.value(forKey: "notes") as? String ?? "",
+            recurring: .none
+        )
+    }
+
+    private func folderFromEntity(_ entity: NSManagedObject) -> LocationFolder? {
+        // Skip deleted entities
+        guard !entity.isDeleted else { return nil }
+
+        guard let id = entity.value(forKey: "id") as? UUID,
+              let name = entity.value(forKey: "name") as? String else {
+            return nil
+        }
+
+        return LocationFolder(
+            id: id,
+            name: name,
+            colorHex: entity.value(forKey: "colorHex") as? String ?? "#007AFF",
+            iconName: "folder.fill",  // Not in Core Data model, use default
+            parentFolderID: entity.value(forKey: "parentFolderID") as? UUID,
+            sortOrder: Int(entity.value(forKey: "sortOrder") as? Int32 ?? 0),
+            createdAt: entity.value(forKey: "createdAt") as? Date ?? Date(),
+            updatedAt: entity.value(forKey: "updatedAt") as? Date ?? Date()
+        )
+    }
+
+    private func commentFromEntity(_ entity: NSManagedObject) -> LocationComment? {
+        guard let id = entity.value(forKey: "id") as? UUID else {
+            return nil
+        }
+
+        // Safely get location relationship - may be nil for orphaned records
+        guard let locationEntity = entity.value(forKey: "location") as? NSManagedObject,
+              !locationEntity.isDeleted,
+              let locationID = locationEntity.value(forKey: "id") as? UUID else {
+            print("⚠️ Comment \(id) has no valid location - skipping")
+            return nil
+        }
+
+        return LocationComment(
+            id: id,
+            locationID: locationID,
+            authorName: entity.value(forKey: "authorName") as? String ?? "",
+            authorEmail: "",
+            content: entity.value(forKey: "content") as? String ?? "",
+            createdAt: entity.value(forKey: "createdAt") as? Date ?? Date(),
+            updatedAt: entity.value(forKey: "updatedAt") as? Date ?? Date(),
+            parentCommentID: entity.value(forKey: "parentCommentID") as? UUID,
+            isResolved: entity.value(forKey: "isResolved") as? Bool ?? false,
+            attachmentData: nil,
+            attachmentName: nil
+        )
+    }
+
+    private func documentFromEntity(_ entity: NSManagedObject) -> LocationDocument? {
+        guard let id = entity.value(forKey: "id") as? UUID else {
+            return nil
+        }
+
+        // Safely get location relationship
+        guard let locationEntity = entity.value(forKey: "location") as? NSManagedObject,
+              !locationEntity.isDeleted,
+              let locationID = locationEntity.value(forKey: "id") as? UUID else {
+            print("⚠️ Document \(id) has no valid location - skipping")
+            return nil
+        }
+
+        // File data may be nil for empty documents
+        let fileData = entity.value(forKey: "fileData") as? Data ?? Data()
+
+        let docTypeString = entity.value(forKey: "documentType") as? String ?? "Other"
+        let docType = LocationDocument.DocumentType(rawValue: docTypeString) ?? .other
+
+        return LocationDocument(
+            id: id,
+            locationID: locationID,
+            name: entity.value(forKey: "name") as? String ?? "",
+            documentType: docType,
+            fileData: fileData,
+            fileExtension: (entity.value(forKey: "fileName") as? String)?.components(separatedBy: ".").last ?? "",
+            createdAt: entity.value(forKey: "createdAt") as? Date ?? Date(),
+            updatedAt: entity.value(forKey: "updatedAt") as? Date ?? Date(),
+            notes: "",
+            expirationDate: nil
+        )
+    }
+
+    private func assignmentFromEntity(_ entity: NSManagedObject) -> LocationAssignment? {
+        guard let id = entity.value(forKey: "id") as? UUID else {
+            return nil
+        }
+
+        // Safely get location relationship
+        guard let locationEntity = entity.value(forKey: "location") as? NSManagedObject,
+              !locationEntity.isDeleted,
+              let locationID = locationEntity.value(forKey: "id") as? UUID else {
+            print("⚠️ Assignment \(id) has no valid location - skipping")
+            return nil
+        }
+
+        let roleString = entity.value(forKey: "role") as? String ?? "Other"
+        let role = LocationAssignment.AssignmentRole(rawValue: roleString) ?? .other
+
+        return LocationAssignment(
+            id: id,
+            locationID: locationID,
+            assigneeName: entity.value(forKey: "assigneeName") as? String ?? "",
+            assigneeEmail: "",  // Not in Core Data model
+            assigneePhone: "",  // Not in Core Data model
+            role: role,
+            taskDescription: entity.value(forKey: "notes") as? String ?? "",  // Use notes field
+            dueDate: entity.value(forKey: "dueDate") as? Date,
+            isCompleted: entity.value(forKey: "isCompleted") as? Bool ?? false,
+            completedAt: nil,  // Not in Core Data model
+            notes: entity.value(forKey: "notes") as? String ?? "",
+            createdAt: entity.value(forKey: "createdAt") as? Date ?? Date(),
+            linkedTaskID: nil  // Not in Core Data model
+        )
+    }
+
+    private func approvalFromEntity(_ entity: NSManagedObject) -> LocationApproval? {
+        guard let id = entity.value(forKey: "id") as? UUID else {
+            return nil
+        }
+
+        // Safely get location relationship
+        guard let locationEntity = entity.value(forKey: "location") as? NSManagedObject,
+              !locationEntity.isDeleted,
+              let locationID = locationEntity.value(forKey: "id") as? UUID else {
+            print("⚠️ Approval \(id) has no valid location - skipping")
+            return nil
+        }
+
+        let statusString = entity.value(forKey: "status") as? String ?? "pending"
+        let status = LocationApproval.ApprovalStatus(rawValue: statusString) ?? .pending
+
+        return LocationApproval(
+            id: id,
+            locationID: locationID,
+            approverName: entity.value(forKey: "approverName") as? String ?? "",
+            approverRole: entity.value(forKey: "step") as? String ?? "",  // Use step field
+            status: status,
+            comments: entity.value(forKey: "notes") as? String ?? "",  // Use notes field
+            requestedAt: entity.value(forKey: "createdAt") as? Date ?? Date(),  // Use createdAt
+            respondedAt: entity.value(forKey: "approvedAt") as? Date,  // Use approvedAt
+            order: Int(entity.value(forKey: "sortOrder") as? Int32 ?? 0)  // Use sortOrder
+        )
+    }
+
+    // MARK: - Find Entity Helpers
+
+    private func findLocationEntity(by id: UUID) -> NSManagedObject? {
+        guard let context = context else { return nil }
+
+        let request = NSFetchRequest<NSManagedObject>(entityName: "LocationEntity")
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        request.fetchLimit = 1
+
+        return try? context.fetch(request).first
+    }
+
+    private func findFolderEntity(by id: UUID) -> NSManagedObject? {
+        guard let context = context else { return nil }
+
+        let request = NSFetchRequest<NSManagedObject>(entityName: "LocationFolderEntity")
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        request.fetchLimit = 1
+
+        return try? context.fetch(request).first
     }
 
     // MARK: - Location CRUD Operations
 
     func addLocation(_ location: LocationItem) {
-        var newLocation = location
-        newLocation = LocationItem(
-            id: location.id,
-            name: location.name,
-            address: location.address,
-            locationInFilm: location.locationInFilm,
-            contact: location.contact,
-            phone: location.phone,
-            email: location.email,
-            permitStatus: location.permitStatus,
-            notes: location.notes,
-            dateToScout: location.dateToScout,
-            scouted: location.scouted,
-            latitude: location.latitude,
-            longitude: location.longitude,
-            imageDatas: location.imageDatas,
-            parkingMapImageData: location.parkingMapImageData,
-            parkingMapAnnotations: location.parkingMapAnnotations,
-            folderID: location.folderID,
-            isFavorite: location.isFavorite,
-            priority: location.priority,
-            photos: location.photos,
-            tagIDs: location.tagIDs,
-            availabilityWindows: location.availabilityWindows,
-            scoutWeather: location.scoutWeather,
-            createdAt: Date(),
-            updatedAt: Date(),
-            createdBy: currentUserName,
-            lastModifiedBy: currentUserName
-        )
-        locations.append(newLocation)
-        saveLocations()
-        logActivity(locationID: newLocation.id, type: .created, description: "Location '\(newLocation.name)' was created")
+        guard let context = context, let projectID = projectID else {
+            print("❌ Cannot add location: Core Data not configured")
+            return
+        }
+
+        guard let project = try? context.existingObject(with: projectID) else {
+            print("❌ Cannot find project for location")
+            return
+        }
+
+        let entity = NSEntityDescription.insertNewObject(forEntityName: "LocationEntity", into: context)
+
+        entity.setValue(location.id, forKey: "id")
+        entity.setValue(location.name, forKey: "name")
+        entity.setValue(location.address, forKey: "address")
+        entity.setValue(location.locationInFilm, forKey: "locationInFilm")
+        entity.setValue(location.contact, forKey: "contact")
+        entity.setValue(location.phone, forKey: "phone")
+        entity.setValue(location.email, forKey: "email")
+        entity.setValue(location.permitStatus, forKey: "permitStatus")
+        entity.setValue(location.notes, forKey: "notes")
+        entity.setValue(location.dateToScout, forKey: "dateToScout")
+        entity.setValue(location.scouted, forKey: "scouted")
+        entity.setValue(location.latitude ?? 0, forKey: "latitude")
+        entity.setValue(location.longitude ?? 0, forKey: "longitude")
+        entity.setValue(location.isFavorite, forKey: "isFavorite")
+        entity.setValue(Int16(location.priority), forKey: "priority")
+        entity.setValue(Int32(locations.count), forKey: "sortOrder")
+        entity.setValue(Date(), forKey: "createdAt")
+        entity.setValue(Date(), forKey: "updatedAt")
+        entity.setValue(currentUserName, forKey: "createdBy")
+        entity.setValue(currentUserName, forKey: "lastModifiedBy")
+        entity.setValue(location.parkingMapImageData, forKey: "parkingMapImageData")
+        entity.setValue(project, forKey: "project")
+
+        // Link to folder if specified
+        if let folderID = location.folderID, let folderEntity = findFolderEntity(by: folderID) {
+            entity.setValue(folderEntity, forKey: "folder")
+        }
+
+        // Encode parking annotations as JSON
+        if !location.parkingMapAnnotations.isEmpty {
+            if let data = try? JSONEncoder().encode(location.parkingMapAnnotations),
+               let json = String(data: data, encoding: .utf8) {
+                entity.setValue(json, forKey: "parkingMapAnnotationsJSON")
+            }
+        }
+
+        // Encode tag IDs as JSON
+        if !location.tagIDs.isEmpty {
+            if let data = try? JSONEncoder().encode(location.tagIDs),
+               let json = String(data: data, encoding: .utf8) {
+                entity.setValue(json, forKey: "tagIDsJSON")
+            }
+        }
+
+        // Add photos
+        for photo in location.photos {
+            addPhotoEntity(photo, to: entity)
+        }
+
+        // Add availability windows
+        for window in location.availabilityWindows {
+            addAvailabilityEntity(window, to: entity)
+        }
+
+        saveContext()
+        loadLocationsFromCoreData()
+
+        logActivity(locationID: location.id, type: .created, description: "Location '\(location.name)' was created")
+    }
+
+    private func addPhotoEntity(_ photo: LocationPhoto, to locationEntity: NSManagedObject) {
+        guard let context = context else { return }
+
+        let photoEntity = NSEntityDescription.insertNewObject(forEntityName: "LocationPhotoEntity", into: context)
+        photoEntity.setValue(photo.id, forKey: "id")
+        photoEntity.setValue(photo.imageData, forKey: "imageData")
+        photoEntity.setValue(photo.thumbnailData, forKey: "thumbnailData")
+        photoEntity.setValue(photo.caption, forKey: "caption")
+        photoEntity.setValue(photo.category.rawValue, forKey: "category")
+        photoEntity.setValue(Int32(0), forKey: "sortOrder")
+        photoEntity.setValue(photo.addedAt, forKey: "createdAt")
+        photoEntity.setValue(locationEntity, forKey: "location")
+
+        if !photo.annotations.isEmpty {
+            if let data = try? JSONEncoder().encode(photo.annotations),
+               let json = String(data: data, encoding: .utf8) {
+                photoEntity.setValue(json, forKey: "annotationsJSON")
+            }
+        }
+    }
+
+    private func addAvailabilityEntity(_ window: AvailabilityWindow, to locationEntity: NSManagedObject) {
+        guard let context = context else { return }
+
+        let availEntity = NSEntityDescription.insertNewObject(forEntityName: "LocationAvailabilityEntity", into: context)
+        availEntity.setValue(window.id, forKey: "id")
+        availEntity.setValue(window.startDate, forKey: "startDate")
+        availEntity.setValue(window.endDate, forKey: "endDate")
+        availEntity.setValue(!window.isAvailable, forKey: "isBlocked")
+        availEntity.setValue(window.notes, forKey: "notes")
+        availEntity.setValue(Date(), forKey: "createdAt")
+        availEntity.setValue(locationEntity, forKey: "location")
     }
 
     func updateLocation(_ location: LocationItem) {
-        if let index = locations.firstIndex(where: { $0.id == location.id }) {
-            var updatedLocation = location
-            updatedLocation = LocationItem(
-                id: location.id,
-                name: location.name,
-                address: location.address,
-                locationInFilm: location.locationInFilm,
-                contact: location.contact,
-                phone: location.phone,
-                email: location.email,
-                permitStatus: location.permitStatus,
-                notes: location.notes,
-                dateToScout: location.dateToScout,
-                scouted: location.scouted,
-                latitude: location.latitude,
-                longitude: location.longitude,
-                imageDatas: location.imageDatas,
-                parkingMapImageData: location.parkingMapImageData,
-                parkingMapAnnotations: location.parkingMapAnnotations,
-                folderID: location.folderID,
-                isFavorite: location.isFavorite,
-                priority: location.priority,
-                photos: location.photos,
-                tagIDs: location.tagIDs,
-                availabilityWindows: location.availabilityWindows,
-                scoutWeather: location.scoutWeather,
-                createdAt: locations[index].createdAt,
-                updatedAt: Date(),
-                createdBy: locations[index].createdBy,
-                lastModifiedBy: currentUserName
+        guard let entity = findLocationEntity(by: location.id) else {
+            print("❌ Cannot find location entity to update")
+            return
+        }
+
+        // Track status changes for activity log
+        let oldStatus = entity.value(forKey: "permitStatus") as? String
+        let oldScouted = entity.value(forKey: "scouted") as? Bool ?? false
+
+        entity.setValue(location.name, forKey: "name")
+        entity.setValue(location.address, forKey: "address")
+        entity.setValue(location.locationInFilm, forKey: "locationInFilm")
+        entity.setValue(location.contact, forKey: "contact")
+        entity.setValue(location.phone, forKey: "phone")
+        entity.setValue(location.email, forKey: "email")
+        entity.setValue(location.permitStatus, forKey: "permitStatus")
+        entity.setValue(location.notes, forKey: "notes")
+        entity.setValue(location.dateToScout, forKey: "dateToScout")
+        entity.setValue(location.scouted, forKey: "scouted")
+        entity.setValue(location.latitude ?? 0, forKey: "latitude")
+        entity.setValue(location.longitude ?? 0, forKey: "longitude")
+        entity.setValue(location.isFavorite, forKey: "isFavorite")
+        entity.setValue(Int16(location.priority), forKey: "priority")
+        entity.setValue(Date(), forKey: "updatedAt")
+        entity.setValue(currentUserName, forKey: "lastModifiedBy")
+        entity.setValue(location.parkingMapImageData, forKey: "parkingMapImageData")
+
+        // Update folder link
+        if let folderID = location.folderID, let folderEntity = findFolderEntity(by: folderID) {
+            entity.setValue(folderEntity, forKey: "folder")
+        } else {
+            entity.setValue(nil, forKey: "folder")
+        }
+
+        // Update JSON fields
+        if let data = try? JSONEncoder().encode(location.parkingMapAnnotations),
+           let json = String(data: data, encoding: .utf8) {
+            entity.setValue(json, forKey: "parkingMapAnnotationsJSON")
+        }
+
+        if let data = try? JSONEncoder().encode(location.tagIDs),
+           let json = String(data: data, encoding: .utf8) {
+            entity.setValue(json, forKey: "tagIDsJSON")
+        }
+
+        if let weather = location.scoutWeather,
+           let data = try? JSONEncoder().encode(weather),
+           let json = String(data: data, encoding: .utf8) {
+            entity.setValue(json, forKey: "scoutWeatherJSON")
+        }
+
+        saveContext()
+        loadLocationsFromCoreData()
+
+        // Log status changes
+        if oldStatus != location.permitStatus {
+            logActivity(
+                locationID: location.id,
+                type: .statusChanged,
+                description: "Permit status changed from '\(oldStatus ?? "Unknown")' to '\(location.permitStatus)'",
+                previousValue: oldStatus,
+                newValue: location.permitStatus,
+                fieldName: "permitStatus"
             )
+        }
 
-            // Track status changes
-            if locations[index].permitStatus != updatedLocation.permitStatus {
-                logActivity(
-                    locationID: location.id,
-                    type: .statusChanged,
-                    description: "Permit status changed from '\(locations[index].permitStatus)' to '\(updatedLocation.permitStatus)'",
-                    previousValue: locations[index].permitStatus,
-                    newValue: updatedLocation.permitStatus,
-                    fieldName: "permitStatus"
-                )
-            }
-
-            // Track scouted changes
-            if locations[index].scouted != updatedLocation.scouted && updatedLocation.scouted {
-                logActivity(locationID: location.id, type: .scouted, description: "Location was marked as scouted")
-            }
-
-            locations[index] = updatedLocation
-            saveLocations()
+        if !oldScouted && location.scouted {
+            logActivity(locationID: location.id, type: .scouted, description: "Location was marked as scouted")
         }
     }
 
     func deleteLocation(_ location: LocationItem) {
+        guard let context = context, let entity = findLocationEntity(by: location.id) else {
+            return
+        }
+
         logActivity(locationID: location.id, type: .updated, description: "Location '\(location.name)' was deleted")
-        locations.removeAll { $0.id == location.id }
-        // Also remove related data
-        comments.removeAll { $0.locationID == location.id }
-        documents.removeAll { $0.locationID == location.id }
-        assignments.removeAll { $0.locationID == location.id }
-        approvals.removeAll { $0.locationID == location.id }
-        saveLocations()
-        saveComments()
-        saveDocuments()
-        saveAssignments()
-        saveApprovals()
+
+        context.delete(entity)
+        saveContext()
+        loadAllDataFromCoreData()
     }
 
     func deleteLocations(at offsets: IndexSet) {
@@ -290,25 +751,52 @@ class LocationDataManager: ObservableObject {
     // MARK: - Folder Operations
 
     func addFolder(_ folder: LocationFolder) {
-        folders.append(folder)
-        saveFolders()
+        guard let context = context, let projectID = projectID else { return }
+
+        guard let project = try? context.existingObject(with: projectID) else { return }
+
+        let entity = NSEntityDescription.insertNewObject(forEntityName: "LocationFolderEntity", into: context)
+        entity.setValue(folder.id, forKey: "id")
+        entity.setValue(folder.name, forKey: "name")
+        entity.setValue(folder.colorHex, forKey: "colorHex")
+        // iconName not in Core Data model
+        entity.setValue(folder.parentFolderID, forKey: "parentFolderID")
+        entity.setValue(Int32(folders.count), forKey: "sortOrder")
+        entity.setValue(Date(), forKey: "createdAt")
+        entity.setValue(Date(), forKey: "updatedAt")
+        entity.setValue(project, forKey: "project")
+
+        saveContext()
+        loadFoldersFromCoreData()
     }
 
     func updateFolder(_ folder: LocationFolder) {
-        if let index = folders.firstIndex(where: { $0.id == folder.id }) {
-            folders[index] = folder
-            saveFolders()
-        }
+        guard let entity = findFolderEntity(by: folder.id) else { return }
+
+        entity.setValue(folder.name, forKey: "name")
+        entity.setValue(folder.colorHex, forKey: "colorHex")
+        // iconName not in Core Data model
+        entity.setValue(folder.parentFolderID, forKey: "parentFolderID")
+        entity.setValue(Date(), forKey: "updatedAt")
+
+        saveContext()
+        loadFoldersFromCoreData()
     }
 
     func deleteFolder(_ folder: LocationFolder) {
-        // Move locations to no folder
-        for i in locations.indices where locations[i].folderID == folder.id {
-            locations[i].folderID = nil
+        guard let context = context, let entity = findFolderEntity(by: folder.id) else { return }
+
+        // Unlink locations from this folder
+        for location in locations where location.folderID == folder.id {
+            if let locEntity = findLocationEntity(by: location.id) {
+                locEntity.setValue(nil, forKey: "folder")
+            }
         }
-        folders.removeAll { $0.id == folder.id }
-        saveFolders()
-        saveLocations()
+
+        context.delete(entity)
+        saveContext()
+        loadFoldersFromCoreData()
+        loadLocationsFromCoreData()
     }
 
     func getLocationsInFolder(_ folderID: UUID?) -> [LocationItem] {
@@ -321,21 +809,54 @@ class LocationDataManager: ObservableObject {
     // MARK: - Comment Operations
 
     func addComment(_ comment: LocationComment) {
-        comments.append(comment)
-        saveComments()
+        guard let context = context,
+              let locationEntity = findLocationEntity(by: comment.locationID) else { return }
+
+        let entity = NSEntityDescription.insertNewObject(forEntityName: "LocationCommentEntity", into: context)
+        entity.setValue(comment.id, forKey: "id")
+        entity.setValue(comment.content, forKey: "content")
+        entity.setValue(comment.authorName, forKey: "authorName")
+        entity.setValue(comment.isResolved, forKey: "isResolved")
+        entity.setValue(comment.parentCommentID, forKey: "parentCommentID")
+        entity.setValue(Date(), forKey: "createdAt")
+        entity.setValue(Date(), forKey: "updatedAt")
+        entity.setValue(locationEntity, forKey: "location")
+
+        saveContext()
+        loadCommentsFromCoreData()
+
         logActivity(locationID: comment.locationID, type: .commentAdded, description: "Comment added by \(comment.authorName)")
     }
 
     func updateComment(_ comment: LocationComment) {
-        if let index = comments.firstIndex(where: { $0.id == comment.id }) {
-            comments[index] = comment
-            saveComments()
-        }
+        guard let context = context else { return }
+
+        let request = NSFetchRequest<NSManagedObject>(entityName: "LocationCommentEntity")
+        request.predicate = NSPredicate(format: "id == %@", comment.id as CVarArg)
+        request.fetchLimit = 1
+
+        guard let entity = try? context.fetch(request).first else { return }
+
+        entity.setValue(comment.content, forKey: "content")
+        entity.setValue(comment.isResolved, forKey: "isResolved")
+        entity.setValue(Date(), forKey: "updatedAt")
+
+        saveContext()
+        loadCommentsFromCoreData()
     }
 
     func deleteComment(_ comment: LocationComment) {
-        comments.removeAll { $0.id == comment.id }
-        saveComments()
+        guard let context = context else { return }
+
+        let request = NSFetchRequest<NSManagedObject>(entityName: "LocationCommentEntity")
+        request.predicate = NSPredicate(format: "id == %@", comment.id as CVarArg)
+        request.fetchLimit = 1
+
+        guard let entity = try? context.fetch(request).first else { return }
+
+        context.delete(entity)
+        saveContext()
+        loadCommentsFromCoreData()
     }
 
     func getComments(for locationID: UUID) -> [LocationComment] {
@@ -345,22 +866,57 @@ class LocationDataManager: ObservableObject {
     // MARK: - Document Operations
 
     func addDocument(_ document: LocationDocument) {
-        documents.append(document)
-        saveDocuments()
+        guard let context = context,
+              let locationEntity = findLocationEntity(by: document.locationID) else { return }
+
+        let entity = NSEntityDescription.insertNewObject(forEntityName: "LocationDocumentEntity", into: context)
+        entity.setValue(document.id, forKey: "id")
+        entity.setValue(document.name, forKey: "name")
+        entity.setValue(document.documentType.rawValue, forKey: "documentType")
+        entity.setValue(document.fileData, forKey: "fileData")
+        entity.setValue("\(document.name).\(document.fileExtension)", forKey: "fileName")
+        entity.setValue(Int64(document.fileData.count), forKey: "fileSize")
+        entity.setValue(Date(), forKey: "createdAt")
+        entity.setValue(Date(), forKey: "updatedAt")
+        entity.setValue(locationEntity, forKey: "location")
+
+        saveContext()
+        loadDocumentsFromCoreData()
+
         logActivity(locationID: document.locationID, type: .documentAdded, description: "Document '\(document.name)' was added")
     }
 
     func updateDocument(_ document: LocationDocument) {
-        if let index = documents.firstIndex(where: { $0.id == document.id }) {
-            documents[index] = document
-            saveDocuments()
-        }
+        guard let context = context else { return }
+
+        let request = NSFetchRequest<NSManagedObject>(entityName: "LocationDocumentEntity")
+        request.predicate = NSPredicate(format: "id == %@", document.id as CVarArg)
+        request.fetchLimit = 1
+
+        guard let entity = try? context.fetch(request).first else { return }
+
+        entity.setValue(document.name, forKey: "name")
+        entity.setValue(document.documentType.rawValue, forKey: "documentType")
+        entity.setValue(Date(), forKey: "updatedAt")
+
+        saveContext()
+        loadDocumentsFromCoreData()
     }
 
     func deleteDocument(_ document: LocationDocument) {
+        guard let context = context else { return }
+
         logActivity(locationID: document.locationID, type: .documentRemoved, description: "Document '\(document.name)' was removed")
-        documents.removeAll { $0.id == document.id }
-        saveDocuments()
+
+        let request = NSFetchRequest<NSManagedObject>(entityName: "LocationDocumentEntity")
+        request.predicate = NSPredicate(format: "id == %@", document.id as CVarArg)
+        request.fetchLimit = 1
+
+        guard let entity = try? context.fetch(request).first else { return }
+
+        context.delete(entity)
+        saveContext()
+        loadDocumentsFromCoreData()
     }
 
     func getDocuments(for locationID: UUID) -> [LocationDocument] {
@@ -369,96 +925,165 @@ class LocationDataManager: ObservableObject {
 
     // MARK: - Assignment Operations
 
-    func addAssignment(_ assignment: LocationAssignment, context: NSManagedObjectContext? = nil) {
+    func addAssignment(_ assignment: LocationAssignment, context taskContext: NSManagedObjectContext? = nil) {
+        guard let context = context,
+              let locationEntity = findLocationEntity(by: assignment.locationID) else { return }
+
         var newAssignment = assignment
 
         // Sync to Tasks app if context is provided
-        if let context = context,
+        if let taskContext = taskContext,
            let location = getLocation(by: assignment.locationID) {
-            let taskID = LocationTaskSyncService.shared.syncAssignment(assignment, locationName: location.name, in: context)
+            let taskID = LocationTaskSyncService.shared.syncAssignment(assignment, locationName: location.name, in: taskContext)
             newAssignment.linkedTaskID = taskID
         }
 
-        assignments.append(newAssignment)
-        saveAssignments()
+        let entity = NSEntityDescription.insertNewObject(forEntityName: "LocationAssignmentEntity", into: context)
+        entity.setValue(newAssignment.id, forKey: "id")
+        entity.setValue(newAssignment.assigneeName, forKey: "assigneeName")
+        // assigneeEmail, assigneePhone not in Core Data model
+        entity.setValue(newAssignment.role.rawValue, forKey: "role")
+        // Store taskDescription in notes field
+        entity.setValue(newAssignment.notes.isEmpty ? newAssignment.taskDescription : newAssignment.notes, forKey: "notes")
+        entity.setValue(newAssignment.dueDate, forKey: "dueDate")
+        entity.setValue(newAssignment.isCompleted, forKey: "isCompleted")
+        // completedAt, linkedTaskID not in Core Data model
+        entity.setValue(Date(), forKey: "createdAt")
+        entity.setValue(Date(), forKey: "updatedAt")
+        entity.setValue(locationEntity, forKey: "location")
+
+        saveContext()
+        loadAssignmentsFromCoreData()
+
         logActivity(locationID: assignment.locationID, type: .assignmentChanged, description: "\(assignment.assigneeName) was assigned as \(assignment.role.rawValue)")
     }
 
-    func updateAssignment(_ assignment: LocationAssignment, context: NSManagedObjectContext? = nil) {
-        if let index = assignments.firstIndex(where: { $0.id == assignment.id }) {
-            var updatedAssignment = assignment
+    func updateAssignment(_ assignment: LocationAssignment, context taskContext: NSManagedObjectContext? = nil) {
+        guard let context = context else { return }
 
-            // Sync to Tasks app if context is provided
-            if let context = context,
-               let location = getLocation(by: assignment.locationID) {
-                // Preserve existing linkedTaskID if not set
-                if updatedAssignment.linkedTaskID == nil {
-                    updatedAssignment.linkedTaskID = assignments[index].linkedTaskID
-                }
-                let taskID = LocationTaskSyncService.shared.syncAssignment(updatedAssignment, locationName: location.name, in: context)
-                updatedAssignment.linkedTaskID = taskID
-            }
+        let request = NSFetchRequest<NSManagedObject>(entityName: "LocationAssignmentEntity")
+        request.predicate = NSPredicate(format: "id == %@", assignment.id as CVarArg)
+        request.fetchLimit = 1
 
-            assignments[index] = updatedAssignment
-            saveAssignments()
+        guard let entity = try? context.fetch(request).first else { return }
+
+        var updatedAssignment = assignment
+
+        // Sync to Tasks app if context is provided
+        // Note: linkedTaskID not in Core Data model, so task sync is in-memory only
+        if let taskContext = taskContext,
+           let location = getLocation(by: assignment.locationID) {
+            let taskID = LocationTaskSyncService.shared.syncAssignment(updatedAssignment, locationName: location.name, in: taskContext)
+            updatedAssignment.linkedTaskID = taskID
         }
+
+        entity.setValue(updatedAssignment.assigneeName, forKey: "assigneeName")
+        // assigneeEmail, assigneePhone not in Core Data model
+        entity.setValue(updatedAssignment.role.rawValue, forKey: "role")
+        // Store taskDescription in notes field
+        entity.setValue(updatedAssignment.notes.isEmpty ? updatedAssignment.taskDescription : updatedAssignment.notes, forKey: "notes")
+        entity.setValue(updatedAssignment.dueDate, forKey: "dueDate")
+        entity.setValue(updatedAssignment.isCompleted, forKey: "isCompleted")
+        // completedAt, linkedTaskID not in Core Data model
+        entity.setValue(Date(), forKey: "updatedAt")
+
+        saveContext()
+        loadAssignmentsFromCoreData()
     }
 
-    func deleteAssignment(_ assignment: LocationAssignment, context: NSManagedObjectContext? = nil) {
+    func deleteAssignment(_ assignment: LocationAssignment, context taskContext: NSManagedObjectContext? = nil) {
+        guard let context = context else { return }
+
         // Delete linked task if context is provided
-        if let context = context, let taskID = assignment.linkedTaskID {
-            LocationTaskSyncService.shared.deleteTask(taskID: taskID, in: context)
+        if let taskContext = taskContext, let taskID = assignment.linkedTaskID {
+            LocationTaskSyncService.shared.deleteTask(taskID: taskID, in: taskContext)
         }
 
-        assignments.removeAll { $0.id == assignment.id }
-        saveAssignments()
+        let request = NSFetchRequest<NSManagedObject>(entityName: "LocationAssignmentEntity")
+        request.predicate = NSPredicate(format: "id == %@", assignment.id as CVarArg)
+        request.fetchLimit = 1
+
+        guard let entity = try? context.fetch(request).first else { return }
+
+        context.delete(entity)
+        saveContext()
+        loadAssignmentsFromCoreData()
     }
 
     func getAssignments(for locationID: UUID) -> [LocationAssignment] {
         return assignments.filter { $0.locationID == locationID }
     }
 
-    /// Sync all assignments for a location to the Tasks app
     func syncAssignmentsToTasks(for locationID: UUID, context: NSManagedObjectContext) {
         guard let location = getLocation(by: locationID) else { return }
 
-        for (index, assignment) in assignments.enumerated() where assignment.locationID == locationID {
-            let taskID = LocationTaskSyncService.shared.syncAssignment(assignment, locationName: location.name, in: context)
-            assignments[index].linkedTaskID = taskID
+        for assignment in assignments where assignment.locationID == locationID {
+            // Sync to Tasks app - linkedTaskID not persisted in Core Data model
+            _ = LocationTaskSyncService.shared.syncAssignment(assignment, locationName: location.name, in: context)
         }
-
-        saveAssignments()
     }
 
-    /// Sync all assignments to the Tasks app
     func syncAllAssignmentsToTasks(context: NSManagedObjectContext) {
-        for (index, assignment) in assignments.enumerated() {
+        for assignment in assignments {
             if let location = getLocation(by: assignment.locationID) {
-                let taskID = LocationTaskSyncService.shared.syncAssignment(assignment, locationName: location.name, in: context)
-                assignments[index].linkedTaskID = taskID
+                // Sync to Tasks app - linkedTaskID not persisted in Core Data model
+                _ = LocationTaskSyncService.shared.syncAssignment(assignment, locationName: location.name, in: context)
             }
         }
+    }
 
-        saveAssignments()
+    private func findAssignmentEntity(by id: UUID) -> NSManagedObject? {
+        guard let context = context else { return nil }
+
+        let request = NSFetchRequest<NSManagedObject>(entityName: "LocationAssignmentEntity")
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        request.fetchLimit = 1
+
+        return try? context.fetch(request).first
     }
 
     // MARK: - Approval Operations
 
     func addApproval(_ approval: LocationApproval) {
-        approvals.append(approval)
-        saveApprovals()
+        guard let context = context,
+              let locationEntity = findLocationEntity(by: approval.locationID) else { return }
+
+        let entity = NSEntityDescription.insertNewObject(forEntityName: "LocationApprovalEntity", into: context)
+        entity.setValue(approval.id, forKey: "id")
+        entity.setValue(approval.approverName, forKey: "approverName")
+        entity.setValue(approval.approverRole, forKey: "step")  // Model uses step
+        entity.setValue(approval.status.rawValue, forKey: "status")
+        entity.setValue(approval.comments, forKey: "notes")  // Model uses notes
+        // requestedAt maps to createdAt
+        entity.setValue(approval.respondedAt, forKey: "approvedAt")  // Model uses approvedAt
+        entity.setValue(Int32(approval.order), forKey: "sortOrder")  // Model uses sortOrder
+        entity.setValue(Date(), forKey: "createdAt")
+        entity.setValue(locationEntity, forKey: "location")
+
+        saveContext()
+        loadApprovalsFromCoreData()
     }
 
     func updateApproval(_ approval: LocationApproval) {
-        if let index = approvals.firstIndex(where: { $0.id == approval.id }) {
-            approvals[index] = approval
-            saveApprovals()
+        guard let context = context else { return }
 
-            if approval.status == .approved {
-                logActivity(locationID: approval.locationID, type: .approved, description: "Approved by \(approval.approverName)")
-            } else if approval.status == .denied {
-                logActivity(locationID: approval.locationID, type: .denied, description: "Denied by \(approval.approverName)")
-            }
+        let request = NSFetchRequest<NSManagedObject>(entityName: "LocationApprovalEntity")
+        request.predicate = NSPredicate(format: "id == %@", approval.id as CVarArg)
+        request.fetchLimit = 1
+
+        guard let entity = try? context.fetch(request).first else { return }
+
+        entity.setValue(approval.status.rawValue, forKey: "status")
+        entity.setValue(approval.comments, forKey: "notes")  // Model uses notes
+        entity.setValue(approval.respondedAt, forKey: "approvedAt")  // Model uses approvedAt
+
+        saveContext()
+        loadApprovalsFromCoreData()
+
+        if approval.status == .approved {
+            logActivity(locationID: approval.locationID, type: .approved, description: "Approved by \(approval.approverName)")
+        } else if approval.status == .denied {
+            logActivity(locationID: approval.locationID, type: .denied, description: "Denied by \(approval.approverName)")
         }
     }
 
@@ -479,7 +1104,7 @@ class LocationDataManager: ObservableObject {
             fieldName: fieldName
         )
         activityLog.append(entry)
-        saveActivityLog()
+        // Activity log is kept in memory for this session
     }
 
     func getActivityLog(for locationID: UUID) -> [ActivityLogEntry] {
@@ -669,8 +1294,8 @@ class LocationDataManager: ObservableObject {
 
     private func exportToPDF(_ locations: [LocationItem]) -> Data? {
         #if os(macOS)
-        let pageWidth: CGFloat = 612  // 8.5 inches at 72 DPI
-        let pageHeight: CGFloat = 792 // 11 inches at 72 DPI
+        let pageWidth: CGFloat = 612
+        let pageHeight: CGFloat = 792
         let margin: CGFloat = 50
 
         let pdfData = NSMutableData()
@@ -695,7 +1320,6 @@ class LocationDataManager: ObservableObject {
 
         startNewPage()
 
-        // Title
         let titleFont = NSFont.boldSystemFont(ofSize: 24)
         let titleAttributes: [NSAttributedString.Key: Any] = [
             .font: titleFont,
@@ -708,7 +1332,6 @@ class LocationDataManager: ObservableObject {
         CTLineDraw(titleLine, context)
         yPosition -= 40
 
-        // Date
         let dateFont = NSFont.systemFont(ofSize: 12)
         let dateAttributes: [NSAttributedString.Key: Any] = [
             .font: dateFont,
@@ -720,7 +1343,6 @@ class LocationDataManager: ObservableObject {
         CTLineDraw(dateLine, context)
         yPosition -= 30
 
-        // Locations
         let headerFont = NSFont.boldSystemFont(ofSize: 14)
         let bodyFont = NSFont.systemFont(ofSize: 11)
 
@@ -729,7 +1351,6 @@ class LocationDataManager: ObservableObject {
                 startNewPage()
             }
 
-            // Location name
             let nameAttrs: [NSAttributedString.Key: Any] = [.font: headerFont, .foregroundColor: NSColor.black]
             let nameString = NSAttributedString(string: location.name, attributes: nameAttrs)
             let nameLine = CTLineCreateWithAttributedString(nameString)
@@ -737,7 +1358,6 @@ class LocationDataManager: ObservableObject {
             CTLineDraw(nameLine, context)
             yPosition -= 18
 
-            // Details
             let details = [
                 "Address: \(location.address)",
                 "Location in Film: \(location.locationInFilm)",
@@ -755,7 +1375,6 @@ class LocationDataManager: ObservableObject {
                 yPosition -= 14
             }
 
-            // Notes
             if !location.notes.isEmpty {
                 let notesString = NSAttributedString(string: "Notes: \(location.notes)", attributes: bodyAttrs)
                 let notesLine = CTLineCreateWithAttributedString(notesString)
@@ -764,7 +1383,7 @@ class LocationDataManager: ObservableObject {
                 yPosition -= 14
             }
 
-            yPosition -= 20 // Space between locations
+            yPosition -= 20
         }
 
         context.endPDFPage()
@@ -785,7 +1404,7 @@ class LocationDataManager: ObservableObject {
         case .csv:
             return importFromCSV(data)
         case .pdf:
-            return 0 // PDF import not supported
+            return 0
         }
     }
 
@@ -799,10 +1418,8 @@ class LocationDataManager: ObservableObject {
 
         var count = 0
         for location in importedLocations {
-            // Check for duplicates by name and address
             if !locations.contains(where: { $0.name == location.name && $0.address == location.address }) {
                 var newLocation = location
-                // Generate new ID to avoid conflicts
                 newLocation = LocationItem(
                     id: UUID(),
                     name: location.name,
@@ -830,7 +1447,8 @@ class LocationDataManager: ObservableObject {
                     createdAt: Date(),
                     updatedAt: Date(),
                     createdBy: currentUserName,
-                    lastModifiedBy: currentUserName
+                    lastModifiedBy: currentUserName,
+                    sortOrder: Int32(locations.count)
                 )
                 addLocation(newLocation)
                 count += 1
@@ -844,7 +1462,7 @@ class LocationDataManager: ObservableObject {
         guard let csvString = String(data: data, encoding: .utf8) else { return 0 }
 
         let lines = csvString.components(separatedBy: .newlines).filter { !$0.isEmpty }
-        guard lines.count > 1 else { return 0 } // Need header + at least one data row
+        guard lines.count > 1 else { return 0 }
 
         var count = 0
         for i in 1..<lines.count {
@@ -854,7 +1472,6 @@ class LocationDataManager: ObservableObject {
             let name = columns[safe: 1] ?? ""
             let address = columns[safe: 2] ?? ""
 
-            // Skip if duplicate
             if locations.contains(where: { $0.name == name && $0.address == address }) {
                 continue
             }
@@ -898,201 +1515,96 @@ class LocationDataManager: ObservableObject {
         return result.map { $0.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "\"\"", with: "\"") }
     }
 
-    // MARK: - iCloud Sync
+    // MARK: - Core Data Save
 
-    private func setupiCloudObserver() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(iCloudDataDidChange),
-            name: NSNotification.Name(rawValue: "NSUbiquityIdentityDidChangeNotification"),
-            object: nil
-        )
-    }
-
-    @objc private func iCloudDataDidChange() {
-        syncFromiCloud()
-    }
-
-    func syncToiCloud() {
-        guard let iCloudURL = iCloudContainerURL else { return }
-
-        isSyncing = true
-
-        DispatchQueue.global(qos: .background).async {
-            try? FileManager.default.createDirectory(at: iCloudURL, withIntermediateDirectories: true, attributes: nil)
-
-            // Copy all data files to iCloud
-            let files = [
-                (self.locationsFileURL, "locations.json"),
-                (self.foldersFileURL, "folders.json"),
-                (self.commentsFileURL, "comments.json"),
-                (self.documentsFileURL, "documents.json"),
-                (self.assignmentsFileURL, "assignments.json"),
-                (self.approvalsFileURL, "approvals.json"),
-                (self.photoTagsFileURL, "photo_tags.json")
-            ]
-
-            for (localURL, filename) in files {
-                let iCloudFileURL = iCloudURL.appendingPathComponent(filename)
-                try? FileManager.default.removeItem(at: iCloudFileURL)
-                try? FileManager.default.copyItem(at: localURL, to: iCloudFileURL)
-            }
-
-            DispatchQueue.main.async {
-                self.isSyncing = false
-                self.lastSyncDate = Date()
-            }
-        }
-    }
-
-    func syncFromiCloud() {
-        guard let iCloudURL = iCloudContainerURL else { return }
-
-        isSyncing = true
-
-        DispatchQueue.global(qos: .background).async {
-            let files = [
-                ("locations.json", self.locationsFileURL),
-                ("folders.json", self.foldersFileURL),
-                ("comments.json", self.commentsFileURL),
-                ("documents.json", self.documentsFileURL),
-                ("assignments.json", self.assignmentsFileURL),
-                ("approvals.json", self.approvalsFileURL),
-                ("photo_tags.json", self.photoTagsFileURL)
-            ]
-
-            for (filename, localURL) in files {
-                let iCloudFileURL = iCloudURL.appendingPathComponent(filename)
-                if FileManager.default.fileExists(atPath: iCloudFileURL.path) {
-                    try? FileManager.default.removeItem(at: localURL)
-                    try? FileManager.default.copyItem(at: iCloudFileURL, to: localURL)
-                }
-            }
-
-            DispatchQueue.main.async {
-                self.loadAllData()
-                self.isSyncing = false
-                self.lastSyncDate = Date()
-            }
-        }
-    }
-
-    // MARK: - Persistence
-
-    private func loadAllData() {
-        loadLocations()
-        loadFolders()
-        loadComments()
-        loadDocuments()
-        loadActivityLog()
-        loadAssignments()
-        loadApprovals()
-        loadPhotoTags()
-    }
-
-    private func saveLocations() {
-        save(locations, to: locationsFileURL)
-    }
-
-    private func loadLocations() {
-        locations = load(from: locationsFileURL) ?? []
-    }
-
-    private func saveFolders() {
-        save(folders, to: foldersFileURL)
-    }
-
-    private func loadFolders() {
-        folders = load(from: foldersFileURL) ?? []
-    }
-
-    private func saveComments() {
-        save(comments, to: commentsFileURL)
-    }
-
-    private func loadComments() {
-        comments = load(from: commentsFileURL) ?? []
-    }
-
-    private func saveDocuments() {
-        save(documents, to: documentsFileURL)
-    }
-
-    private func loadDocuments() {
-        documents = load(from: documentsFileURL) ?? []
-    }
-
-    private func saveActivityLog() {
-        save(activityLog, to: activityLogFileURL)
-    }
-
-    private func loadActivityLog() {
-        activityLog = load(from: activityLogFileURL) ?? []
-    }
-
-    private func saveAssignments() {
-        save(assignments, to: assignmentsFileURL)
-    }
-
-    private func loadAssignments() {
-        assignments = load(from: assignmentsFileURL) ?? []
-    }
-
-    private func saveApprovals() {
-        save(approvals, to: approvalsFileURL)
-    }
-
-    private func loadApprovals() {
-        approvals = load(from: approvalsFileURL) ?? []
-    }
-
-    private func savePhotoTags() {
-        save(photoTags, to: photoTagsFileURL)
-    }
-
-    private func loadPhotoTags() {
-        photoTags = load(from: photoTagsFileURL) ?? []
-    }
-
-    private func save<T: Encodable>(_ data: T, to url: URL) {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted
-        encoder.dateEncodingStrategy = .iso8601
+    private func saveContext() {
+        guard let context = context, context.hasChanges else { return }
 
         do {
-            let jsonData = try encoder.encode(data)
-            try jsonData.write(to: url, options: [.atomic])
+            try context.save()
         } catch {
-            print("Failed to save data: \(error)")
+            print("❌ Failed to save location context: \(error)")
         }
     }
 
-    private func load<T: Decodable>(from url: URL) -> T? {
-        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+    // MARK: - Legacy JSON Migration
 
-        do {
-            let data = try Data(contentsOf: url)
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            return try decoder.decode(T.self, from: data)
-        } catch {
-            print("Failed to load data from \(url.lastPathComponent): \(error)")
-            return nil
-        }
-    }
+    private func checkAndMigrateLegacyData() {
+        let locationsFile = legacyLocationsFileURL
 
-    private func migrateFromUserDefaults() {
-        let oldKey = "com.productionrunner.locations"
+        // Check if legacy JSON files exist
+        guard FileManager.default.fileExists(atPath: locationsFile.path) else {
+            print("📍 No legacy JSON data to migrate")
 
-        guard let data = UserDefaults.standard.data(forKey: oldKey),
-              let decoded = try? JSONDecoder().decode([LocationItem].self, from: data) else {
+            // Initialize defaults for empty project
+            if locations.isEmpty {
+                initializeDefaultFolders()
+            }
             return
         }
 
-        locations = decoded
-        saveLocations()
-        UserDefaults.standard.removeObject(forKey: oldKey)
-        print("Migrated \(locations.count) locations from UserDefaults to file storage")
+        print("📍 Found legacy JSON data, starting migration...")
+
+        // Load legacy locations
+        if let data = try? Data(contentsOf: locationsFile) {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+
+            if let legacyLocations = try? decoder.decode([LocationItem].self, from: data) {
+                print("📍 Migrating \(legacyLocations.count) locations from JSON...")
+
+                for location in legacyLocations {
+                    addLocation(location)
+                }
+
+                print("✅ Migration complete")
+
+                // Archive the old files (don't delete in case user needs them)
+                let archiveFolder = legacyAppSupportFolder.appendingPathComponent("migrated_\(Date().timeIntervalSince1970)")
+                try? FileManager.default.createDirectory(at: archiveFolder, withIntermediateDirectories: true)
+
+                let filesToArchive = [
+                    "locations.json", "folders.json", "comments.json",
+                    "documents.json", "assignments.json", "approvals.json", "photo_tags.json"
+                ]
+
+                for file in filesToArchive {
+                    let source = legacyAppSupportFolder.appendingPathComponent(file)
+                    let dest = archiveFolder.appendingPathComponent(file)
+                    try? FileManager.default.moveItem(at: source, to: dest)
+                }
+
+                print("📍 Archived legacy files to: \(archiveFolder.path)")
+            }
+        }
+
+        // Load legacy folders
+        let foldersFile = legacyFoldersFileURL
+        if let data = try? Data(contentsOf: foldersFile) {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+
+            if let legacyFolders = try? decoder.decode([LocationFolder].self, from: data) {
+                for folder in legacyFolders {
+                    addFolder(folder)
+                }
+            }
+        }
+    }
+
+    private func initializeDefaultFolders() {
+        let defaultFolders = [
+            LocationFolder(name: "All Locations", colorHex: "#007AFF", iconName: "mappin.circle.fill", sortOrder: 0),
+            LocationFolder(name: "Favorites", colorHex: "#FF9500", iconName: "star.fill", sortOrder: 1),
+            LocationFolder(name: "Pending Approval", colorHex: "#FF3B30", iconName: "clock.fill", sortOrder: 2),
+            LocationFolder(name: "Approved", colorHex: "#34C759", iconName: "checkmark.circle.fill", sortOrder: 3)
+        ]
+
+        for folder in defaultFolders {
+            addFolder(folder)
+        }
+
+        print("📍 Created default folders")
     }
 }
 
@@ -1102,6 +1614,3 @@ private extension Array {
         return indices.contains(index) ? self[index] : nil
     }
 }
-
-// MARK: - CLLocationCoordinate2D Import
-import MapKit

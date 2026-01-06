@@ -27,6 +27,7 @@ private struct ConePathShape: Shape {
 struct TopDownShotPlanner: View {
     @Environment(\.managedObjectContext) private var moc
     let selectedScene: NSManagedObject?
+    let selectedCamera: String
 
     // Canvas State
     @State private var canvasElements: [CanvasElement] = []
@@ -34,7 +35,9 @@ struct TopDownShotPlanner: View {
     @State private var selectedTool: PlannerTool = .select
     @State private var canvasOffset: CGPoint = .zero
     @State private var canvasScale: CGFloat = 1.0
+    @GestureState private var magnificationDelta: CGFloat = 1.0 // For pinch gesture tracking
     @State private var showRoomPicker = false
+    @State private var showLightPicker = false
     @State private var showInspector = true
     @State private var gridSpacing: CGFloat = 20
 
@@ -48,6 +51,7 @@ struct TopDownShotPlanner: View {
     @State private var lightIntensity: Double = 100
     @State private var showLightBeam = true
     @State private var wallThickness: Int = 1 // 0=Thin, 1=Medium, 2=Thick
+    @State private var selectedLightType: String = "ARRI SkyPanel S60-C"
 
     // Creation state
     @State private var isCreating = false
@@ -64,6 +68,12 @@ struct TopDownShotPlanner: View {
                     showRoomPicker = false
                 }
             }
+            .sheet(isPresented: $showLightPicker) {
+                CinemaLightPicker(selectedLight: $selectedLightType) { lightName in
+                    addLightElement(named: lightName)
+                    showLightPicker = false
+                }
+            }
             .onAppear {
                 loadCanvasElements()
             }
@@ -73,6 +83,12 @@ struct TopDownShotPlanner: View {
             .onChange(of: canvasElements) { _ in
                 // Auto-save on changes (debounced)
                 saveCanvasElements()
+            }
+            .onChange(of: selectedScene) { _ in
+                // Save current scene's canvas before switching, load new scene's canvas
+                saveCanvasElements()
+                loadCanvasElements()
+                selectedElementID = nil
             }
             #if os(macOS)
             .undoRedoSupport(
@@ -136,8 +152,13 @@ struct TopDownShotPlanner: View {
     #if os(macOS)
     private func handleKeyPress(_ key: String) -> Bool {
         switch key.lowercased() {
+        // Selection & Move
         case "v":
             selectedTool = .select
+            return true
+        // Room tools
+        case "t":
+            showRoomPicker = true
             return true
         case "w":
             selectedTool = .wall
@@ -145,9 +166,20 @@ struct TopDownShotPlanner: View {
         case "d":
             selectedTool = .door
             return true
-        case "t":
-            showRoomPicker = true
+        // Furniture tools
+        case "1":
+            selectedTool = .table
             return true
+        case "2":
+            selectedTool = .chair
+            return true
+        case "3":
+            selectedTool = .sofa
+            return true
+        case "4":
+            selectedTool = .bed
+            return true
+        // Production tools
         case "c":
             selectedTool = .camera
             return true
@@ -155,10 +187,30 @@ struct TopDownShotPlanner: View {
             selectedTool = .actor
             return true
         case "l":
-            selectedTool = .light
+            showLightPicker = true
             return true
         case "p":
             selectedTool = .prop
+            return true
+        // Delete selected element
+        case "\u{7F}", "\u{08}": // Delete and Backspace
+            if let id = selectedElementID {
+                deleteElement(id)
+            }
+            return true
+        // Duplicate selected element
+        case "j": // Cmd+D is often taken, use J for "clone/copy"
+            if let id = selectedElementID {
+                duplicateElement(id)
+            }
+            return true
+        // Grid toggle
+        case "g":
+            showGrid.toggle()
+            return true
+        // Snap to grid toggle
+        case "s":
+            snapToGrid.toggle()
             return true
         default:
             return false
@@ -226,18 +278,18 @@ struct TopDownShotPlanner: View {
             plannerToolbar
 
             GeometryReader { geometry in
+                // Background color (outside scaled content)
+                #if os(macOS)
+                Color(NSColor.controlBackgroundColor)
+                #else
+                Color(UIColor.secondarySystemBackground)
+                #endif
+
                 ZStack {
                     // Grid background (conditionally visible)
                     if showGrid {
                         PlannerGridView(spacing: gridSpacing, scale: canvasScale)
                     }
-
-                    // Background color
-                    #if os(macOS)
-                    Color(NSColor.controlBackgroundColor)
-                    #else
-                    Color(UIColor.secondarySystemBackground)
-                    #endif
 
                     // Room elements (walls, furniture) - render first
                     ForEach($canvasElements.filter { $0.wrappedValue.category == .room }) { $element in
@@ -246,9 +298,9 @@ struct TopDownShotPlanner: View {
                             isSelected: selectedElementID == element.id,
                             onSelect: { selectedElementID = element.id },
                             onDragStart: saveStateForUndo,
-                            onMove: { delta in moveElement(element.id, by: delta) },
+                            onMove: { delta in moveElement(element.id, by: CGSize(width: delta.width / canvasScale, height: delta.height / canvasScale)) },
                             onRotate: { angle in rotateElement(element.id, by: angle) },
-                            onResize: { handle, delta in resizeElement(element.id, handle: handle, delta: delta) }
+                            onResize: { handle, delta in resizeElement(element.id, handle: handle, delta: CGSize(width: delta.width / canvasScale, height: delta.height / canvasScale)) }
                         )
                     }
 
@@ -259,18 +311,39 @@ struct TopDownShotPlanner: View {
                             isSelected: selectedElementID == element.id,
                             onSelect: { selectedElementID = element.id },
                             onDragStart: saveStateForUndo,
-                            onMove: { delta in moveElement(element.id, by: delta) },
+                            onMove: { delta in moveElement(element.id, by: CGSize(width: delta.width / canvasScale, height: delta.height / canvasScale)) },
                             onRotate: { angle in rotateElement(element.id, by: angle) },
-                            onResize: { handle, delta in resizeElement(element.id, handle: handle, delta: delta) }
+                            onResize: { handle, delta in resizeElement(element.id, handle: handle, delta: CGSize(width: delta.width / canvasScale, height: delta.height / canvasScale)) }
                         )
                     }
                 }
+                .scaleEffect(max(0.25, min(3.0, canvasScale * magnificationDelta)))
+                .offset(x: canvasOffset.x, y: canvasOffset.y)
                 .gesture(canvasGesture(in: geometry.size))
-                .onTapGesture {
+                .onTapGesture { location in
+                    let effectiveScale = canvasScale * magnificationDelta
                     if selectedTool == .select {
                         selectedElementID = nil
+                    } else {
+                        // Click-to-place: adjust location for scale and offset
+                        let adjustedLocation = CGPoint(
+                            x: (location.x - canvasOffset.x) / effectiveScale,
+                            y: (location.y - canvasOffset.y) / effectiveScale
+                        )
+                        addElementAtLocation(type: selectedTool.toElementType(), location: adjustedLocation)
                     }
                 }
+                .gesture(
+                    MagnificationGesture()
+                        .updating($magnificationDelta) { value, state, _ in
+                            state = value
+                        }
+                        .onEnded { value in
+                            let newScale = max(0.25, min(3.0, canvasScale * value))
+                            canvasScale = newScale
+                        }
+                )
+                .clipped()
             }
         }
     }
@@ -385,7 +458,7 @@ struct TopDownShotPlanner: View {
                                 label: "Light",
                                 shortcut: "L",
                                 isSelected: selectedTool == .light,
-                                action: { selectedTool = .light }
+                                action: { showLightPicker = true }
                             )
                             ProToolbarButton(
                                 icon: "cube",
@@ -463,13 +536,14 @@ struct TopDownShotPlanner: View {
                     }
                     .padding(.trailing, 12)
                 }
-                .frame(height: 44)
+                .frame(height: 54)
             }
-            .frame(height: 44)
+            .frame(height: 54)
 
             // Context-sensitive options bar
             toolOptionsBar
         }
+        .padding(.top, 4)
         #if os(macOS)
         .background(
             VisualEffectBlur(material: .headerView, blendingMode: .behindWindow)
@@ -545,6 +619,16 @@ struct TopDownShotPlanner: View {
     @ViewBuilder
     private var cameraToolOptions: some View {
         HStack(spacing: 12) {
+            OptionsLabel(text: "Camera:")
+            Text(selectedCamera)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(RoundedRectangle(cornerRadius: 4).fill(Color.blue.opacity(0.1)))
+
+            Divider().frame(height: 14)
+
             OptionsLabel(text: "FOV:")
             OptionsSlider(value: $cameraFOV, range: 20...120, label: "\(Int(cameraFOV))°")
 
@@ -556,6 +640,25 @@ struct TopDownShotPlanner: View {
     @ViewBuilder
     private var lightToolOptions: some View {
         HStack(spacing: 12) {
+            OptionsLabel(text: "Light:")
+            Text(selectedLightType)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(RoundedRectangle(cornerRadius: 4).fill(Color.yellow.opacity(0.15)))
+
+            Button(action: { showLightPicker = true }) {
+                Text("Change")
+                    .font(.system(size: 9, weight: .medium))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(RoundedRectangle(cornerRadius: 4).fill(Color.secondary.opacity(0.1)))
+            }
+            .buttonStyle(.plain)
+
+            Divider().frame(height: 14)
+
             OptionsLabel(text: "Intensity:")
             OptionsSlider(value: $lightIntensity, range: 0...100, label: "\(Int(lightIntensity))%")
 
@@ -641,26 +744,44 @@ struct TopDownShotPlanner: View {
     }
 
     private func handleCreationDrag(_ value: DragGesture.Value, in size: CGSize) {
+        // Adjust coordinates for canvas scale and offset
+        let adjustedStart = CGPoint(
+            x: (value.startLocation.x - canvasOffset.x) / canvasScale,
+            y: (value.startLocation.y - canvasOffset.y) / canvasScale
+        )
+        let adjustedLocation = CGPoint(
+            x: (value.location.x - canvasOffset.x) / canvasScale,
+            y: (value.location.y - canvasOffset.y) / canvasScale
+        )
+
         if !isCreating {
             isCreating = true
-            creationStart = value.startLocation
+            creationStart = adjustedStart
             saveStateForUndo() // Save state before adding new element
 
-            let newElement = CanvasElement(
-                type: selectedTool.toElementType(),
-                position: value.startLocation,
+            let elementType = selectedTool.toElementType()
+            var newElement = CanvasElement(
+                type: elementType,
+                position: adjustedStart,
                 size: CGSize(width: 1, height: 1),
                 rotation: 0
             )
+
+            // Set camera name from selected camera in toolbar
+            if elementType == .camera {
+                newElement.name = selectedCamera
+                newElement.label = "A" // Default camera label
+            }
+
             canvasElements.append(newElement)
             selectedElementID = newElement.id
         } else {
             guard let index = canvasElements.firstIndex(where: { $0.id == selectedElementID }) else { return }
 
-            let width = abs(value.location.x - creationStart.x)
-            let height = abs(value.location.y - creationStart.y)
-            let minX = min(value.location.x, creationStart.x)
-            let minY = min(value.location.y, creationStart.y)
+            let width = abs(adjustedLocation.x - creationStart.x)
+            let height = abs(adjustedLocation.y - creationStart.y)
+            let minX = min(adjustedLocation.x, creationStart.x)
+            let minY = min(adjustedLocation.y, creationStart.y)
 
             canvasElements[index].position = CGPoint(x: minX + width/2, y: minY + height/2)
             canvasElements[index].size = CGSize(width: max(width, 20), height: max(height, 20))
@@ -737,9 +858,122 @@ struct TopDownShotPlanner: View {
 
     private func addRoomTemplate(_ template: RoomTemplate) {
         saveStateForUndo()
-        let elements = template.generateElements(at: CGPoint(x: 300, y: 300))
+        // Center the template in the visible canvas area (accounting for scale and offset)
+        let centerX: CGFloat = 500
+        let centerY: CGFloat = 400
+        let elements = template.generateElements(at: CGPoint(x: centerX, y: centerY))
         canvasElements.append(contentsOf: elements)
     }
+
+    private func addLightElement(named lightName: String) {
+        saveStateForUndo()
+        selectedLightType = lightName
+        selectedTool = .light
+
+        var newElement = CanvasElement(
+            type: .light,
+            position: CGPoint(x: 300, y: 300),
+            size: ElementType.light.defaultSize,
+            rotation: 0,
+            lightSettings: LightSettings()
+        )
+        newElement.name = lightName
+        newElement.label = "Key" // Default light label
+
+        canvasElements.append(newElement)
+        selectedElementID = newElement.id
+    }
+
+    /// Generic function to add any element type to the canvas at center position
+    private func addElement(type: ElementType, name: String? = nil, label: String? = nil) {
+        addElementAtLocation(type: type, location: CGPoint(x: 300, y: 300), name: name, label: label)
+    }
+
+    /// Add element at a specific location (used for click-to-place)
+    private func addElementAtLocation(type: ElementType, location: CGPoint, name: String? = nil, label: String? = nil) {
+        saveStateForUndo()
+
+        var newElement = CanvasElement(
+            type: type,
+            position: location,
+            size: type.defaultSize,
+            rotation: 0
+        )
+
+        // Set appropriate names/labels based on element type
+        if let name = name {
+            newElement.name = name
+        } else if type == .camera {
+            newElement.name = selectedCamera
+        }
+
+        if let label = label {
+            newElement.label = label
+        } else {
+            switch type {
+            case .camera:
+                newElement.label = "A"
+            case .actor:
+                newElement.label = "1"
+            case .light:
+                newElement.label = "Key"
+            default:
+                break
+            }
+        }
+
+        canvasElements.append(newElement)
+        selectedElementID = newElement.id
+        selectedTool = .select
+    }
+}
+
+// MARK: - Light Settings Model
+struct LightSettings: Codable, Equatable {
+    var intensity: Double = 100 // 0-100%
+    var colorTemperature: Int = 5600 // Kelvin (2700-10000)
+    var beamAngle: Double = 60 // degrees
+    var dimmer: Double = 100 // 0-100%
+    var showBeam: Bool = true
+    var gelColor: String = "" // Optional gel color name
+    var notes: String = "" // Any additional notes
+
+    // Preset color temperatures
+    static let colorTemperatures: [(name: String, kelvin: Int)] = [
+        ("Tungsten", 2700),
+        ("Warm White", 3200),
+        ("Neutral", 4300),
+        ("Daylight", 5600),
+        ("Overcast", 6500),
+        ("Shade", 7500),
+        ("Blue Sky", 10000)
+    ]
+
+    // Common gel colors
+    static let commonGels: [String] = [
+        "None",
+        "CTO (Full)",
+        "CTO (1/2)",
+        "CTO (1/4)",
+        "CTB (Full)",
+        "CTB (1/2)",
+        "CTB (1/4)",
+        "Plus Green",
+        "Minus Green",
+        "Straw",
+        "Amber",
+        "Light Pink",
+        "Lavender",
+        "Steel Blue",
+        "Congo Blue",
+        "Fire",
+        "ND.3",
+        "ND.6",
+        "ND.9",
+        "Diffusion (Light)",
+        "Diffusion (Heavy)",
+        "Grid Cloth"
+    ]
 }
 
 // MARK: - Canvas Element Model
@@ -753,7 +987,8 @@ struct CanvasElement: Identifiable, Codable, Equatable {
         lhs.colorHex == rhs.colorHex &&
         lhs.name == rhs.name &&
         lhs.label == rhs.label &&
-        lhs.attachedShotIDString == rhs.attachedShotIDString
+        lhs.attachedShotIDString == rhs.attachedShotIDString &&
+        lhs.lightSettings == rhs.lightSettings
     }
 
     var id = UUID()
@@ -765,6 +1000,7 @@ struct CanvasElement: Identifiable, Codable, Equatable {
     var name: String = ""
     var label: String = ""
     var attachedShotIDString: String? // Store as URI string for Codable
+    var lightSettings: LightSettings? // Only used for light elements
 
     var color: Color {
         get { Color(hex: colorHex) ?? .primary }
@@ -787,16 +1023,17 @@ struct CanvasElement: Identifiable, Codable, Equatable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, type, position, size, rotation, colorHex, name, label, attachedShotIDString
+        case id, type, position, size, rotation, colorHex, name, label, attachedShotIDString, lightSettings
     }
 
-    init(type: ElementType, position: CGPoint, size: CGSize, rotation: Double, color: Color = .primary, name: String = "") {
+    init(type: ElementType, position: CGPoint, size: CGSize, rotation: Double, color: Color = .primary, name: String = "", lightSettings: LightSettings? = nil) {
         self.type = type
         self.position = position
         self.size = size
         self.rotation = rotation
         self.colorHex = color.toHex() ?? "#000000"
         self.name = name.isEmpty ? type.defaultName : name
+        self.lightSettings = type == .light ? (lightSettings ?? LightSettings()) : nil
     }
 }
 
@@ -1038,7 +1275,7 @@ private struct PlannerElementView: View {
         case .actor:
             StickFigureShape(size: element.size, rotation: element.rotation, label: element.label)
         case .light:
-            DirectionalLightShape(size: element.size, rotation: element.rotation, label: element.label)
+            DirectionalLightShape(size: element.size, rotation: element.rotation, label: element.label, lightSettings: element.lightSettings)
         case .prop:
             PropShape(size: element.size, label: element.label)
         }
@@ -1391,18 +1628,20 @@ private struct DirectionalCameraShape: View {
     let rotation: Double
     let label: String
 
+    // Frame dimensions
+    private var frameWidth: CGFloat { size.width * 2.5 }
+    private var frameHeight: CGFloat { size.height * 2 }
+
     var body: some View {
         ZStack {
-            // Camera field of view cone
-            ZStack {
-                ConePathShape(coneLength: size.width * 1.5, coneWidth: size.width * 1.2, centerX: size.width/2, centerY: size.height/2)
-                    .fill(Color.blue.opacity(0.15))
+            // Camera field of view cone - starts from center of frame
+            ConePathShape(coneLength: size.width * 1.5, coneWidth: size.width * 1.2, centerX: frameWidth/2, centerY: frameHeight/2)
+                .fill(Color.blue.opacity(0.15))
 
-                ConePathShape(coneLength: size.width * 1.5, coneWidth: size.width * 1.2, centerX: size.width/2, centerY: size.height/2)
-                    .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-            }
+            ConePathShape(coneLength: size.width * 1.5, coneWidth: size.width * 1.2, centerX: frameWidth/2, centerY: frameHeight/2)
+                .stroke(Color.blue.opacity(0.3), lineWidth: 1)
 
-            // Camera body
+            // Camera body - centered in frame (at cone tip)
             ZStack {
                 // Main body
                 RoundedRectangle(cornerRadius: 4)
@@ -1423,26 +1662,26 @@ private struct DirectionalCameraShape: View {
                     .font(.system(size: size.width * 0.25))
                     .foregroundColor(.blue)
                     .offset(x: size.width * 0.35)
-            }
 
-            // Camera outline
-            RoundedRectangle(cornerRadius: 6)
-                .stroke(Color.blue, lineWidth: 2)
-                .frame(width: size.width, height: size.height)
+                // Camera outline
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(Color.blue, lineWidth: 2)
+                    .frame(width: size.width, height: size.height)
 
-            // Label
-            if !label.isEmpty {
-                Text(label)
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.blue)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 2)
-                    .background(Color.white.opacity(0.9))
-                    .cornerRadius(3)
-                    .offset(y: size.height/2 + 12)
+                // Label
+                if !label.isEmpty {
+                    Text(label)
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
+                        .background(Color.white.opacity(0.9))
+                        .cornerRadius(3)
+                        .offset(y: size.height/2 + 12)
+                }
             }
         }
-        .frame(width: size.width * 2.5, height: size.height * 2)
+        .frame(width: frameWidth, height: frameHeight)
     }
 }
 
@@ -1546,62 +1785,220 @@ private struct DirectionalLightShape: View {
     let size: CGSize
     let rotation: Double
     let label: String
+    let lightSettings: LightSettings?
+
+    // Frame dimensions
+    private var frameWidth: CGFloat { size.width * 3.5 }
+    private var frameHeight: CGFloat { size.height * 2.5 }
+
+    // Computed properties for visual settings
+    private var settings: LightSettings {
+        lightSettings ?? LightSettings()
+    }
+
+    // Combined intensity from intensity and dimmer (both 0-100%)
+    private var effectiveIntensity: Double {
+        (settings.intensity / 100.0) * (settings.dimmer / 100.0)
+    }
+
+    // Convert color temperature (Kelvin) to Color
+    private var temperatureColor: Color {
+        let kelvin = settings.colorTemperature
+
+        // Color temperature approximation based on Kelvin scale
+        // 2700K = warm orange/amber, 5600K = neutral white, 10000K = cool blue
+        if kelvin <= 2700 {
+            return Color(red: 1.0, green: 0.65, blue: 0.3) // Warm tungsten
+        } else if kelvin <= 3200 {
+            let t = Double(kelvin - 2700) / 500.0
+            return Color(red: 1.0, green: 0.65 + t * 0.15, blue: 0.3 + t * 0.2)
+        } else if kelvin <= 4300 {
+            let t = Double(kelvin - 3200) / 1100.0
+            return Color(red: 1.0, green: 0.8 + t * 0.1, blue: 0.5 + t * 0.3)
+        } else if kelvin <= 5600 {
+            let t = Double(kelvin - 4300) / 1300.0
+            return Color(red: 1.0 - t * 0.05, green: 0.9 + t * 0.1, blue: 0.8 + t * 0.2)
+        } else if kelvin <= 6500 {
+            let t = Double(kelvin - 5600) / 900.0
+            return Color(red: 0.95 - t * 0.1, green: 0.95 + t * 0.05, blue: 1.0)
+        } else if kelvin <= 7500 {
+            let t = Double(kelvin - 6500) / 1000.0
+            return Color(red: 0.85 - t * 0.1, green: 0.9 + t * 0.05, blue: 1.0)
+        } else {
+            let t = min(1.0, Double(kelvin - 7500) / 2500.0)
+            return Color(red: 0.75 - t * 0.15, green: 0.85, blue: 1.0) // Cool blue sky
+        }
+    }
+
+    // Convert gel color name to Color tint
+    private var gelTint: Color? {
+        switch settings.gelColor {
+        case "CTO (Full)": return Color(red: 1.0, green: 0.6, blue: 0.2)
+        case "CTO (1/2)": return Color(red: 1.0, green: 0.75, blue: 0.45)
+        case "CTO (1/4)": return Color(red: 1.0, green: 0.85, blue: 0.6)
+        case "CTB (Full)": return Color(red: 0.4, green: 0.7, blue: 1.0)
+        case "CTB (1/2)": return Color(red: 0.6, green: 0.8, blue: 1.0)
+        case "CTB (1/4)": return Color(red: 0.75, green: 0.88, blue: 1.0)
+        case "Plus Green": return Color(red: 0.7, green: 1.0, blue: 0.7)
+        case "Minus Green": return Color(red: 1.0, green: 0.7, blue: 0.9)
+        case "Straw": return Color(red: 1.0, green: 0.95, blue: 0.7)
+        case "Amber": return Color(red: 1.0, green: 0.75, blue: 0.3)
+        case "Light Pink": return Color(red: 1.0, green: 0.8, blue: 0.85)
+        case "Lavender": return Color(red: 0.85, green: 0.75, blue: 1.0)
+        case "Steel Blue": return Color(red: 0.55, green: 0.7, blue: 0.9)
+        case "Congo Blue": return Color(red: 0.2, green: 0.3, blue: 0.8)
+        case "Fire": return Color(red: 1.0, green: 0.4, blue: 0.1)
+        case "ND.3", "ND.6", "ND.9": return Color.gray
+        case "Diffusion (Light)", "Diffusion (Heavy)", "Grid Cloth": return Color.white.opacity(0.8)
+        default: return nil
+        }
+    }
+
+    // Final light color combining temperature and gel (blended together)
+    private var lightColor: Color {
+        if let gel = gelTint {
+            // Blend gel color with temperature color using multiplicative blend
+            return blendColors(base: temperatureColor, overlay: gel)
+        }
+        return temperatureColor
+    }
+
+    // Blend two colors together (simulates gel filtering light)
+    private func blendColors(base: Color, overlay: Color) -> Color {
+        #if os(macOS)
+        let baseNS = NSColor(base)
+        let overlayNS = NSColor(overlay)
+
+        var baseR: CGFloat = 0, baseG: CGFloat = 0, baseB: CGFloat = 0, baseA: CGFloat = 0
+        var overlayR: CGFloat = 0, overlayG: CGFloat = 0, overlayB: CGFloat = 0, overlayA: CGFloat = 0
+
+        baseNS.getRed(&baseR, green: &baseG, blue: &baseB, alpha: &baseA)
+        overlayNS.getRed(&overlayR, green: &overlayG, blue: &overlayB, alpha: &overlayA)
+
+        // Multiplicative blend simulates light passing through a colored gel
+        return Color(
+            red: baseR * overlayR,
+            green: baseG * overlayG,
+            blue: baseB * overlayB
+        )
+        #else
+        let baseUI = UIColor(base)
+        let overlayUI = UIColor(overlay)
+
+        var baseR: CGFloat = 0, baseG: CGFloat = 0, baseB: CGFloat = 0, baseA: CGFloat = 0
+        var overlayR: CGFloat = 0, overlayG: CGFloat = 0, overlayB: CGFloat = 0, overlayA: CGFloat = 0
+
+        baseUI.getRed(&baseR, green: &baseG, blue: &baseB, alpha: &baseA)
+        overlayUI.getRed(&overlayR, green: &overlayG, blue: &overlayB, alpha: &overlayA)
+
+        // Multiplicative blend simulates light passing through a colored gel
+        return Color(
+            red: baseR * overlayR,
+            green: baseG * overlayG,
+            blue: baseB * overlayB
+        )
+        #endif
+    }
+
+    // Beam width based on beam angle (10° to 120°)
+    private var beamWidthMultiplier: CGFloat {
+        // Map beam angle to visual width (0.5x to 3x)
+        let normalizedAngle = (settings.beamAngle - 10) / 110.0
+        return 0.5 + CGFloat(normalizedAngle) * 2.5
+    }
 
     var body: some View {
         ZStack {
-            // Light beam cone
-            Path { path in
-                let beamLength = size.width * 2
-                let beamWidth = size.width * 1.5
-                path.move(to: CGPoint(x: size.width/2, y: size.height/2))
-                path.addLine(to: CGPoint(x: size.width/2 + beamLength, y: size.height/2 - beamWidth/2))
-                path.addLine(to: CGPoint(x: size.width/2 + beamLength, y: size.height/2 + beamWidth/2))
-                path.closeSubpath()
-            }
-            .fill(
-                LinearGradient(
-                    colors: [Color.yellow.opacity(0.4), Color.yellow.opacity(0.05)],
-                    startPoint: .leading,
-                    endPoint: .trailing
+            // Light beam cone - only show if showBeam is enabled, starts from center of frame
+            if settings.showBeam {
+                Path { path in
+                    let beamLength = size.width * 2.5
+                    let beamWidth = size.width * beamWidthMultiplier
+                    let centerX = frameWidth / 2
+                    let centerY = frameHeight / 2
+                    path.move(to: CGPoint(x: centerX, y: centerY))
+                    path.addLine(to: CGPoint(x: centerX + beamLength, y: centerY - beamWidth/2))
+                    path.addLine(to: CGPoint(x: centerX + beamLength, y: centerY + beamWidth/2))
+                    path.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            lightColor.opacity(0.5 * effectiveIntensity),
+                            lightColor.opacity(0.05 * effectiveIntensity)
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
                 )
-            )
+            }
 
-            // Light source circle
+            // Light source circle - brightness reflects intensity
             Circle()
-                .fill(Color.yellow)
+                .fill(lightColor.opacity(0.3 + 0.7 * effectiveIntensity))
                 .frame(width: size.width * 0.6, height: size.height * 0.6)
                 .overlay(
                     Circle()
-                        .stroke(Color.orange, lineWidth: 2)
+                        .stroke(lightColor.opacity(0.8), lineWidth: 2)
                 )
 
-            // Rays emanating from light
+            // Inner glow for high intensity
+            if effectiveIntensity > 0.5 {
+                Circle()
+                    .fill(Color.white.opacity((effectiveIntensity - 0.5) * 0.6))
+                    .frame(width: size.width * 0.3, height: size.height * 0.3)
+            }
+
+            // Rays emanating from light - intensity affects visibility
             ForEach(0..<6, id: \.self) { i in
                 Rectangle()
-                    .fill(Color.yellow.opacity(0.6))
-                    .frame(width: 3, height: size.height * 0.25)
+                    .fill(lightColor.opacity(0.4 + 0.4 * effectiveIntensity))
+                    .frame(width: 3, height: size.height * (0.2 + 0.15 * effectiveIntensity))
                     .offset(y: -size.height * 0.35)
                     .rotationEffect(.degrees(Double(i) * 60))
             }
 
-            // Light fixture outline
+            // Light fixture outline - color indicates temperature
             Circle()
-                .stroke(Color.orange, lineWidth: 2)
+                .stroke(lightColor.opacity(0.9), lineWidth: 2)
                 .frame(width: size.width, height: size.height)
+
+            // Gel indicator ring if gel is applied
+            if gelTint != nil {
+                Circle()
+                    .stroke(gelTint!, lineWidth: 3)
+                    .frame(width: size.width + 6, height: size.height + 6)
+                    .opacity(0.7)
+            }
+
+            // Dimmer indicator (small arc showing dimmer level)
+            if settings.dimmer < 100 {
+                Circle()
+                    .trim(from: 0, to: CGFloat(settings.dimmer / 100.0))
+                    .stroke(Color.gray.opacity(0.6), lineWidth: 2)
+                    .frame(width: size.width + 12, height: size.height + 12)
+                    .rotationEffect(.degrees(-90))
+            }
 
             // Label
             if !label.isEmpty {
                 Text(label)
                     .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.orange)
+                    .foregroundColor(lightColor.opacity(0.9))
                     .padding(.horizontal, 4)
                     .padding(.vertical, 2)
                     .background(Color.white.opacity(0.9))
                     .cornerRadius(3)
                     .offset(y: size.height/2 + 12)
             }
+
+            // Intensity percentage indicator (top)
+            Text("\(Int(effectiveIntensity * 100))%")
+                .font(.system(size: 8, weight: .medium))
+                .foregroundColor(.secondary)
+                .offset(y: -size.height/2 - 8)
         }
-        .frame(width: size.width * 3, height: size.height * 2)
+        .frame(width: frameWidth, height: frameHeight)
     }
 }
 
@@ -1651,6 +2048,11 @@ private struct ProToolbarButton: View {
 
     @State private var isHovered = false
 
+    // Wider button for longer labels like "Templates"
+    private var buttonWidth: CGFloat {
+        label.count > 6 ? 56 : 44
+    }
+
     var body: some View {
         Button(action: action) {
             VStack(spacing: 2) {
@@ -1661,8 +2063,9 @@ private struct ProToolbarButton: View {
                 Text(label)
                     .font(.system(size: 9, weight: .medium))
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
-            .frame(width: 44, height: 38)
+            .frame(width: buttonWidth, height: 38)
             .foregroundStyle(isSelected ? Color.accentColor : (isHovered ? Color.primary : Color.secondary))
             .background(
                 RoundedRectangle(cornerRadius: 6)
@@ -1975,7 +2378,17 @@ private struct KeyboardShortcutHandler: UIViewRepresentable {
                 ("c", [], #selector(handleC)),
                 ("a", [], #selector(handleA)),
                 ("l", [], #selector(handleL)),
-                ("p", [], #selector(handleP))
+                ("p", [], #selector(handleP)),
+                // Furniture shortcuts
+                ("1", [], #selector(handle1)),
+                ("2", [], #selector(handle2)),
+                ("3", [], #selector(handle3)),
+                ("4", [], #selector(handle4)),
+                // Utility shortcuts
+                ("g", [], #selector(handleG)),
+                ("s", [], #selector(handleS)),
+                ("j", [], #selector(handleJ)),
+                (UIKeyCommand.inputDelete, [], #selector(handleDelete))
             ]
 
             return shortcuts.map { input, modifiers, selector in
@@ -1991,6 +2404,14 @@ private struct KeyboardShortcutHandler: UIViewRepresentable {
         @objc private func handleA() { _ = onKeyPress?("a") }
         @objc private func handleL() { _ = onKeyPress?("l") }
         @objc private func handleP() { _ = onKeyPress?("p") }
+        @objc private func handle1() { _ = onKeyPress?("1") }
+        @objc private func handle2() { _ = onKeyPress?("2") }
+        @objc private func handle3() { _ = onKeyPress?("3") }
+        @objc private func handle4() { _ = onKeyPress?("4") }
+        @objc private func handleG() { _ = onKeyPress?("g") }
+        @objc private func handleS() { _ = onKeyPress?("s") }
+        @objc private func handleJ() { _ = onKeyPress?("j") }
+        @objc private func handleDelete() { _ = onKeyPress?("\u{7F}") }
     }
 }
 #endif
@@ -2037,6 +2458,11 @@ private struct PlannerInspectorView: View {
 
                     // Layers list
                     layersList
+
+                    Divider()
+
+                    // Shots list for attaching cameras
+                    shotsList
                 }
                 .padding(12)
             }
@@ -2046,6 +2472,49 @@ private struct PlannerInspectorView: View {
         #else
         .background(Color(UIColor.secondarySystemBackground))
         #endif
+    }
+
+    // Get shots for the selected scene
+    private var sceneShots: [NSManagedObject] {
+        guard let scene = selectedScene,
+              let shots = scene.value(forKey: "shots") as? NSSet else { return [] }
+        return shots.allObjects
+            .compactMap { $0 as? NSManagedObject }
+            .sorted { shot1, shot2 in
+                let num1 = safeString(shot1, keys: ["code", "title"])
+                let num2 = safeString(shot2, keys: ["code", "title"])
+                return num1.localizedStandardCompare(num2) == .orderedAscending
+            }
+    }
+
+    // Safe helper to get string from NSManagedObject checking if key exists and object is valid
+    private func safeString(_ obj: NSManagedObject, keys: [String]) -> String {
+        // Guard against deleted or invalid objects to prevent EXC_BAD_ACCESS
+        guard !obj.isDeleted, obj.managedObjectContext != nil else { return "" }
+
+        for key in keys {
+            if obj.entity.attributesByName.keys.contains(key),
+               let value = obj.value(forKey: key) as? String, !value.isEmpty {
+                return value
+            }
+        }
+        // Try index as fallback
+        if obj.entity.attributesByName.keys.contains("index"),
+           let idx = obj.value(forKey: "index") as? Int16 {
+            return String(idx)
+        }
+        return ""
+    }
+
+    // Find which camera element is attached to a shot
+    private func cameraAttachedTo(shot: NSManagedObject) -> CanvasElement? {
+        let shotIDString = shot.objectID.uriRepresentation().absoluteString
+        return elements.first { $0.type == .camera && $0.attachedShotIDString == shotIDString }
+    }
+
+    // Get all camera elements
+    private var cameraElements: [CanvasElement] {
+        elements.filter { $0.type == .camera }
     }
 
     @ViewBuilder
@@ -2088,6 +2557,11 @@ private struct PlannerInspectorView: View {
                     .textFieldStyle(.roundedBorder)
                     .font(.system(size: 11))
                 }
+            }
+
+            // Light-specific settings
+            if element.type == .light {
+                lightSettingsSection(element: element, index: index)
             }
 
             // Rotation control
@@ -2171,6 +2645,365 @@ private struct PlannerInspectorView: View {
         }
         .padding(10)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color.primary.opacity(0.03)))
+    }
+
+    @ViewBuilder
+    private func lightSettingsSection(element: CanvasElement, index: Int) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Section header
+            HStack {
+                Image(systemName: "lightbulb.fill")
+                    .font(.system(size: 10))
+                    .foregroundColor(.yellow)
+                Text("Light Settings")
+                    .font(.system(size: 11, weight: .semibold))
+            }
+            .padding(.top, 4)
+
+            // Intensity
+            HStack {
+                Text("Intensity")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 70, alignment: .leading)
+
+                Slider(value: Binding(
+                    get: { elements[index].lightSettings?.intensity ?? 100 },
+                    set: {
+                        if elements[index].lightSettings == nil {
+                            elements[index].lightSettings = LightSettings()
+                        }
+                        elements[index].lightSettings?.intensity = $0
+                    }
+                ), in: 0...100, step: 5)
+
+                Text("\(Int(element.lightSettings?.intensity ?? 100))%")
+                    .font(.system(size: 10, weight: .medium))
+                    .frame(width: 35)
+            }
+
+            // Dimmer
+            HStack {
+                Text("Dimmer")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 70, alignment: .leading)
+
+                Slider(value: Binding(
+                    get: { elements[index].lightSettings?.dimmer ?? 100 },
+                    set: {
+                        if elements[index].lightSettings == nil {
+                            elements[index].lightSettings = LightSettings()
+                        }
+                        elements[index].lightSettings?.dimmer = $0
+                    }
+                ), in: 0...100, step: 5)
+
+                Text("\(Int(element.lightSettings?.dimmer ?? 100))%")
+                    .font(.system(size: 10, weight: .medium))
+                    .frame(width: 35)
+            }
+
+            // Color Temperature
+            HStack {
+                Text("Color Temp")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 70, alignment: .leading)
+
+                Picker("", selection: Binding(
+                    get: { elements[index].lightSettings?.colorTemperature ?? 5600 },
+                    set: {
+                        if elements[index].lightSettings == nil {
+                            elements[index].lightSettings = LightSettings()
+                        }
+                        elements[index].lightSettings?.colorTemperature = $0
+                    }
+                )) {
+                    ForEach(LightSettings.colorTemperatures, id: \.kelvin) { temp in
+                        Text("\(temp.name) (\(temp.kelvin)K)").tag(temp.kelvin)
+                    }
+                }
+                .labelsHidden()
+                .frame(maxWidth: .infinity)
+            }
+
+            // Beam Angle
+            HStack {
+                Text("Beam Angle")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 70, alignment: .leading)
+
+                Slider(value: Binding(
+                    get: { elements[index].lightSettings?.beamAngle ?? 60 },
+                    set: {
+                        if elements[index].lightSettings == nil {
+                            elements[index].lightSettings = LightSettings()
+                        }
+                        elements[index].lightSettings?.beamAngle = $0
+                    }
+                ), in: 10...180, step: 5)
+
+                Text("\(Int(element.lightSettings?.beamAngle ?? 60))°")
+                    .font(.system(size: 10, weight: .medium))
+                    .frame(width: 35)
+            }
+
+            // Gel Color
+            HStack {
+                Text("Gel")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 70, alignment: .leading)
+
+                Picker("", selection: Binding(
+                    get: { elements[index].lightSettings?.gelColor ?? "None" },
+                    set: {
+                        if elements[index].lightSettings == nil {
+                            elements[index].lightSettings = LightSettings()
+                        }
+                        elements[index].lightSettings?.gelColor = $0 == "None" ? "" : $0
+                    }
+                )) {
+                    ForEach(LightSettings.commonGels, id: \.self) { gel in
+                        Text(gel).tag(gel)
+                    }
+                }
+                .labelsHidden()
+                .frame(maxWidth: .infinity)
+            }
+
+            // Show Beam toggle
+            HStack {
+                Text("Show Beam")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 70, alignment: .leading)
+
+                Toggle("", isOn: Binding(
+                    get: { elements[index].lightSettings?.showBeam ?? true },
+                    set: {
+                        if elements[index].lightSettings == nil {
+                            elements[index].lightSettings = LightSettings()
+                        }
+                        elements[index].lightSettings?.showBeam = $0
+                    }
+                ))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .controlSize(.small)
+
+                Spacer()
+            }
+
+            // Notes
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Notes")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+
+                TextField("Add notes...", text: Binding(
+                    get: { elements[index].lightSettings?.notes ?? "" },
+                    set: {
+                        if elements[index].lightSettings == nil {
+                            elements[index].lightSettings = LightSettings()
+                        }
+                        elements[index].lightSettings?.notes = $0
+                    }
+                ))
+                .textFieldStyle(.roundedBorder)
+                .font(.system(size: 10))
+            }
+        }
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Color.yellow.opacity(0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .strokeBorder(Color.yellow.opacity(0.2), lineWidth: 1)
+        )
+    }
+
+    private var shotsList: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Section header
+            HStack {
+                Image(systemName: "film.stack")
+                    .font(.system(size: 11))
+                    .foregroundColor(.blue)
+                Text("Scene Shots")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text("\(sceneShots.count)")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.tertiary)
+            }
+
+            if sceneShots.isEmpty {
+                HStack(spacing: 6) {
+                    Image(systemName: "film")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.tertiary)
+                    Text("No shots in this scene")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.vertical, 8)
+            } else {
+                VStack(spacing: 4) {
+                    ForEach(sceneShots, id: \.objectID) { shot in
+                        shotRow(shot: shot)
+                    }
+                }
+            }
+
+            // Help text
+            if !cameraElements.isEmpty && !sceneShots.isEmpty {
+                Text("Drag a camera to a shot or use the dropdown to link them")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.tertiary)
+                    .padding(.top, 4)
+            }
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.blue.opacity(0.03))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(Color.blue.opacity(0.1), lineWidth: 1)
+        )
+    }
+
+    @ViewBuilder
+    private func shotRow(shot: NSManagedObject) -> some View {
+        let shotNumber = safeString(shot, keys: ["code", "title"]).isEmpty ? "—" : safeString(shot, keys: ["code", "title"])
+        let shotType = safeString(shot, keys: ["type", "shotType"])
+        let shotDescription = safeString(shot, keys: ["descriptionText", "description", "notes"])
+        let attachedCamera = cameraAttachedTo(shot: shot)
+
+        HStack(spacing: 8) {
+            // Shot number badge
+            Text(shotNumber)
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .frame(width: 28, height: 22)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.blue)
+                )
+
+            // Shot info
+            VStack(alignment: .leading, spacing: 2) {
+                if !shotType.isEmpty {
+                    Text(shotType)
+                        .font(.system(size: 10, weight: .medium))
+                        .lineLimit(1)
+                }
+                if !shotDescription.isEmpty {
+                    Text(shotDescription)
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            // Camera attachment dropdown
+            Menu {
+                Button {
+                    detachCameraFromShot(shot: shot)
+                } label: {
+                    HStack {
+                        Image(systemName: "xmark.circle")
+                        Text("No Camera")
+                    }
+                }
+
+                Divider()
+
+                ForEach(cameraElements, id: \.id) { camera in
+                    Button {
+                        attachCameraToShot(camera: camera, shot: shot)
+                    } label: {
+                        HStack {
+                            Image(systemName: "video.fill")
+                            Text(camera.name)
+                            if !camera.label.isEmpty {
+                                Text("(\(camera.label))")
+                                    .foregroundStyle(.secondary)
+                            }
+                            if camera.id == attachedCamera?.id {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+
+                if cameraElements.isEmpty {
+                    Text("No cameras on canvas")
+                        .foregroundStyle(.secondary)
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: attachedCamera != nil ? "video.fill" : "video")
+                        .font(.system(size: 10))
+                    if let camera = attachedCamera {
+                        Text(camera.label.isEmpty ? camera.name : camera.label)
+                            .font(.system(size: 9, weight: .medium))
+                            .lineLimit(1)
+                    } else {
+                        Text("Link")
+                            .font(.system(size: 9))
+                    }
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 7))
+                }
+                .foregroundStyle(attachedCamera != nil ? Color.green : Color.secondary)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(attachedCamera != nil ? Color.green.opacity(0.1) : Color.primary.opacity(0.05))
+                )
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(attachedCamera != nil ? Color.green.opacity(0.05) : Color.primary.opacity(0.02))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .strokeBorder(attachedCamera != nil ? Color.green.opacity(0.2) : Color.primary.opacity(0.05), lineWidth: 1)
+        )
+    }
+
+    private func attachCameraToShot(camera: CanvasElement, shot: NSManagedObject) {
+        guard let index = elements.firstIndex(where: { $0.id == camera.id }) else { return }
+
+        // First, detach any other camera from this shot
+        let shotIDString = shot.objectID.uriRepresentation().absoluteString
+        for (i, element) in elements.enumerated() where element.type == .camera && element.attachedShotIDString == shotIDString && element.id != camera.id {
+            elements[i].attachedShotIDString = nil
+        }
+
+        // Attach this camera to the shot
+        elements[index].attachedShotIDString = shotIDString
+    }
+
+    private func detachCameraFromShot(shot: NSManagedObject) {
+        let shotIDString = shot.objectID.uriRepresentation().absoluteString
+        for (i, element) in elements.enumerated() where element.type == .camera && element.attachedShotIDString == shotIDString {
+            elements[i].attachedShotIDString = nil
+        }
     }
 
     private var layersList: some View {
@@ -2269,22 +3102,22 @@ struct RoomTemplate: Identifiable {
         return elements
     }
 
-    // MARK: - Preset Templates
+    // MARK: - Preset Templates (scaled 3x for better visibility)
     static let livingRoom = RoomTemplate(
         name: "Living Room",
         icon: "sofa",
         description: "Standard living room with sofa and TV area",
         walls: [
-            WallConfig(offset: CGPoint(x: 0, y: -100), size: CGSize(width: 250, height: 12), rotation: 0),     // Top
-            WallConfig(offset: CGPoint(x: 0, y: 100), size: CGSize(width: 250, height: 12), rotation: 0),      // Bottom
-            WallConfig(offset: CGPoint(x: -125, y: 0), size: CGSize(width: 200, height: 12), rotation: 90),    // Left
-            WallConfig(offset: CGPoint(x: 125, y: 0), size: CGSize(width: 200, height: 12), rotation: 90),     // Right
+            WallConfig(offset: CGPoint(x: 0, y: -300), size: CGSize(width: 750, height: 24), rotation: 0),     // Top
+            WallConfig(offset: CGPoint(x: 0, y: 300), size: CGSize(width: 750, height: 24), rotation: 0),      // Bottom
+            WallConfig(offset: CGPoint(x: -375, y: 0), size: CGSize(width: 600, height: 24), rotation: 90),    // Left
+            WallConfig(offset: CGPoint(x: 375, y: 0), size: CGSize(width: 600, height: 24), rotation: 90),     // Right
         ],
         furniture: [
-            FurnitureConfig(type: .sofa, offset: CGPoint(x: 0, y: 50), size: CGSize(width: 120, height: 50), rotation: 0),
-            FurnitureConfig(type: .table, offset: CGPoint(x: 0, y: 0), size: CGSize(width: 80, height: 50), rotation: 0),
-            FurnitureConfig(type: .chair, offset: CGPoint(x: -70, y: 0), size: CGSize(width: 40, height: 40), rotation: 90),
-            FurnitureConfig(type: .chair, offset: CGPoint(x: 70, y: 0), size: CGSize(width: 40, height: 40), rotation: -90),
+            FurnitureConfig(type: .sofa, offset: CGPoint(x: 0, y: 150), size: CGSize(width: 360, height: 150), rotation: 0),
+            FurnitureConfig(type: .table, offset: CGPoint(x: 0, y: 0), size: CGSize(width: 240, height: 150), rotation: 0),
+            FurnitureConfig(type: .chair, offset: CGPoint(x: -210, y: 0), size: CGSize(width: 120, height: 120), rotation: 90),
+            FurnitureConfig(type: .chair, offset: CGPoint(x: 210, y: 0), size: CGSize(width: 120, height: 120), rotation: -90),
         ]
     )
 
@@ -2293,15 +3126,15 @@ struct RoomTemplate: Identifiable {
         icon: "bed.double",
         description: "Master bedroom with bed and nightstands",
         walls: [
-            WallConfig(offset: CGPoint(x: 0, y: -100), size: CGSize(width: 220, height: 12), rotation: 0),
-            WallConfig(offset: CGPoint(x: 0, y: 100), size: CGSize(width: 220, height: 12), rotation: 0),
-            WallConfig(offset: CGPoint(x: -110, y: 0), size: CGSize(width: 200, height: 12), rotation: 90),
-            WallConfig(offset: CGPoint(x: 110, y: 0), size: CGSize(width: 200, height: 12), rotation: 90),
+            WallConfig(offset: CGPoint(x: 0, y: -300), size: CGSize(width: 660, height: 24), rotation: 0),
+            WallConfig(offset: CGPoint(x: 0, y: 300), size: CGSize(width: 660, height: 24), rotation: 0),
+            WallConfig(offset: CGPoint(x: -330, y: 0), size: CGSize(width: 600, height: 24), rotation: 90),
+            WallConfig(offset: CGPoint(x: 330, y: 0), size: CGSize(width: 600, height: 24), rotation: 90),
         ],
         furniture: [
-            FurnitureConfig(type: .bed, offset: CGPoint(x: 0, y: -30), size: CGSize(width: 90, height: 130), rotation: 0),
-            FurnitureConfig(type: .cabinet, offset: CGPoint(x: -60, y: -60), size: CGSize(width: 35, height: 35), rotation: 0),
-            FurnitureConfig(type: .cabinet, offset: CGPoint(x: 60, y: -60), size: CGSize(width: 35, height: 35), rotation: 0),
+            FurnitureConfig(type: .bed, offset: CGPoint(x: 0, y: -90), size: CGSize(width: 270, height: 390), rotation: 0),
+            FurnitureConfig(type: .cabinet, offset: CGPoint(x: -180, y: -180), size: CGSize(width: 105, height: 105), rotation: 0),
+            FurnitureConfig(type: .cabinet, offset: CGPoint(x: 180, y: -180), size: CGSize(width: 105, height: 105), rotation: 0),
         ]
     )
 
@@ -2310,19 +3143,19 @@ struct RoomTemplate: Identifiable {
         icon: "refrigerator",
         description: "Kitchen with counter and dining area",
         walls: [
-            WallConfig(offset: CGPoint(x: 0, y: -80), size: CGSize(width: 200, height: 12), rotation: 0),
-            WallConfig(offset: CGPoint(x: 0, y: 80), size: CGSize(width: 200, height: 12), rotation: 0),
-            WallConfig(offset: CGPoint(x: -100, y: 0), size: CGSize(width: 160, height: 12), rotation: 90),
-            WallConfig(offset: CGPoint(x: 100, y: 0), size: CGSize(width: 160, height: 12), rotation: 90),
+            WallConfig(offset: CGPoint(x: 0, y: -240), size: CGSize(width: 600, height: 24), rotation: 0),
+            WallConfig(offset: CGPoint(x: 0, y: 240), size: CGSize(width: 600, height: 24), rotation: 0),
+            WallConfig(offset: CGPoint(x: -300, y: 0), size: CGSize(width: 480, height: 24), rotation: 90),
+            WallConfig(offset: CGPoint(x: 300, y: 0), size: CGSize(width: 480, height: 24), rotation: 90),
         ],
         furniture: [
-            FurnitureConfig(type: .cabinet, offset: CGPoint(x: -70, y: -50), size: CGSize(width: 50, height: 25), rotation: 0),
-            FurnitureConfig(type: .cabinet, offset: CGPoint(x: -70, y: -20), size: CGSize(width: 50, height: 25), rotation: 0),
-            FurnitureConfig(type: .table, offset: CGPoint(x: 30, y: 30), size: CGSize(width: 70, height: 70), rotation: 0),
-            FurnitureConfig(type: .chair, offset: CGPoint(x: 0, y: 30), size: CGSize(width: 30, height: 30), rotation: 90),
-            FurnitureConfig(type: .chair, offset: CGPoint(x: 60, y: 30), size: CGSize(width: 30, height: 30), rotation: -90),
-            FurnitureConfig(type: .chair, offset: CGPoint(x: 30, y: 0), size: CGSize(width: 30, height: 30), rotation: 180),
-            FurnitureConfig(type: .chair, offset: CGPoint(x: 30, y: 60), size: CGSize(width: 30, height: 30), rotation: 0),
+            FurnitureConfig(type: .cabinet, offset: CGPoint(x: -210, y: -150), size: CGSize(width: 150, height: 75), rotation: 0),
+            FurnitureConfig(type: .cabinet, offset: CGPoint(x: -210, y: -60), size: CGSize(width: 150, height: 75), rotation: 0),
+            FurnitureConfig(type: .table, offset: CGPoint(x: 90, y: 90), size: CGSize(width: 210, height: 210), rotation: 0),
+            FurnitureConfig(type: .chair, offset: CGPoint(x: 0, y: 90), size: CGSize(width: 90, height: 90), rotation: 90),
+            FurnitureConfig(type: .chair, offset: CGPoint(x: 180, y: 90), size: CGSize(width: 90, height: 90), rotation: -90),
+            FurnitureConfig(type: .chair, offset: CGPoint(x: 90, y: 0), size: CGSize(width: 90, height: 90), rotation: 180),
+            FurnitureConfig(type: .chair, offset: CGPoint(x: 90, y: 180), size: CGSize(width: 90, height: 90), rotation: 0),
         ]
     )
 
@@ -2331,17 +3164,17 @@ struct RoomTemplate: Identifiable {
         icon: "desktopcomputer",
         description: "Office space with desk and meeting area",
         walls: [
-            WallConfig(offset: CGPoint(x: 0, y: -90), size: CGSize(width: 240, height: 12), rotation: 0),
-            WallConfig(offset: CGPoint(x: 0, y: 90), size: CGSize(width: 240, height: 12), rotation: 0),
-            WallConfig(offset: CGPoint(x: -120, y: 0), size: CGSize(width: 180, height: 12), rotation: 90),
-            WallConfig(offset: CGPoint(x: 120, y: 0), size: CGSize(width: 180, height: 12), rotation: 90),
+            WallConfig(offset: CGPoint(x: 0, y: -270), size: CGSize(width: 720, height: 24), rotation: 0),
+            WallConfig(offset: CGPoint(x: 0, y: 270), size: CGSize(width: 720, height: 24), rotation: 0),
+            WallConfig(offset: CGPoint(x: -360, y: 0), size: CGSize(width: 540, height: 24), rotation: 90),
+            WallConfig(offset: CGPoint(x: 360, y: 0), size: CGSize(width: 540, height: 24), rotation: 90),
         ],
         furniture: [
-            FurnitureConfig(type: .desk, offset: CGPoint(x: -50, y: -40), size: CGSize(width: 100, height: 50), rotation: 0),
-            FurnitureConfig(type: .chair, offset: CGPoint(x: -50, y: -10), size: CGSize(width: 35, height: 35), rotation: 180),
-            FurnitureConfig(type: .table, offset: CGPoint(x: 50, y: 30), size: CGSize(width: 80, height: 60), rotation: 0),
-            FurnitureConfig(type: .chair, offset: CGPoint(x: 20, y: 30), size: CGSize(width: 30, height: 30), rotation: 90),
-            FurnitureConfig(type: .chair, offset: CGPoint(x: 80, y: 30), size: CGSize(width: 30, height: 30), rotation: -90),
+            FurnitureConfig(type: .desk, offset: CGPoint(x: -150, y: -120), size: CGSize(width: 300, height: 150), rotation: 0),
+            FurnitureConfig(type: .chair, offset: CGPoint(x: -150, y: -30), size: CGSize(width: 105, height: 105), rotation: 180),
+            FurnitureConfig(type: .table, offset: CGPoint(x: 150, y: 90), size: CGSize(width: 240, height: 180), rotation: 0),
+            FurnitureConfig(type: .chair, offset: CGPoint(x: 60, y: 90), size: CGSize(width: 90, height: 90), rotation: 90),
+            FurnitureConfig(type: .chair, offset: CGPoint(x: 240, y: 90), size: CGSize(width: 90, height: 90), rotation: -90),
         ]
     )
 
@@ -2350,10 +3183,10 @@ struct RoomTemplate: Identifiable {
         icon: "shower",
         description: "Small bathroom layout",
         walls: [
-            WallConfig(offset: CGPoint(x: 0, y: -60), size: CGSize(width: 140, height: 12), rotation: 0),
-            WallConfig(offset: CGPoint(x: 0, y: 60), size: CGSize(width: 140, height: 12), rotation: 0),
-            WallConfig(offset: CGPoint(x: -70, y: 0), size: CGSize(width: 120, height: 12), rotation: 90),
-            WallConfig(offset: CGPoint(x: 70, y: 0), size: CGSize(width: 120, height: 12), rotation: 90),
+            WallConfig(offset: CGPoint(x: 0, y: -180), size: CGSize(width: 420, height: 24), rotation: 0),
+            WallConfig(offset: CGPoint(x: 0, y: 180), size: CGSize(width: 420, height: 24), rotation: 0),
+            WallConfig(offset: CGPoint(x: -210, y: 0), size: CGSize(width: 360, height: 24), rotation: 90),
+            WallConfig(offset: CGPoint(x: 210, y: 0), size: CGSize(width: 360, height: 24), rotation: 90),
         ],
         furniture: []
     )
@@ -2363,8 +3196,8 @@ struct RoomTemplate: Identifiable {
         icon: "arrow.left.and.right",
         description: "Long corridor",
         walls: [
-            WallConfig(offset: CGPoint(x: 0, y: -30), size: CGSize(width: 300, height: 12), rotation: 0),
-            WallConfig(offset: CGPoint(x: 0, y: 30), size: CGSize(width: 300, height: 12), rotation: 0),
+            WallConfig(offset: CGPoint(x: 0, y: -90), size: CGSize(width: 900, height: 24), rotation: 0),
+            WallConfig(offset: CGPoint(x: 0, y: 90), size: CGSize(width: 900, height: 24), rotation: 0),
         ],
         furniture: []
     )
@@ -2382,8 +3215,8 @@ struct RoomTemplate: Identifiable {
         icon: "stairs",
         description: "Stairwell area",
         walls: [
-            WallConfig(offset: CGPoint(x: -50, y: 0), size: CGSize(width: 120, height: 12), rotation: 90),
-            WallConfig(offset: CGPoint(x: 50, y: 0), size: CGSize(width: 120, height: 12), rotation: 90),
+            WallConfig(offset: CGPoint(x: -150, y: 0), size: CGSize(width: 360, height: 24), rotation: 90),
+            WallConfig(offset: CGPoint(x: 150, y: 0), size: CGSize(width: 360, height: 24), rotation: 90),
         ],
         furniture: []
     )
@@ -2406,9 +3239,12 @@ private struct RoomTemplatePicker: View {
         VStack(spacing: 0) {
             // Header
             HStack {
+                Spacer()
                 Text("Choose Room Template")
                     .font(.system(size: 16, weight: .semibold))
                 Spacer()
+            }
+            .overlay(alignment: .trailing) {
                 Button("Cancel") { dismiss() }
                     .buttonStyle(.plain)
                     .foregroundColor(.secondary)
@@ -2425,7 +3261,7 @@ private struct RoomTemplatePicker: View {
                         }
                     }
                 }
-                .padding()
+                .padding(20)
             }
         }
         .frame(width: 500, height: 400)
@@ -2445,21 +3281,22 @@ private struct RoomTemplateCard: View {
                 Image(systemName: template.icon)
                     .font(.system(size: 28))
                     .foregroundColor(.accentColor)
-                    .frame(height: 40)
+                    .frame(height: 36)
 
                 // Name
                 Text(template.name)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
 
                 // Description
                 Text(template.description)
-                    .font(.system(size: 10))
+                    .font(.system(size: 9))
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
             }
-            .padding()
+            .padding(12)
             .frame(maxWidth: .infinity)
+            .frame(minHeight: 100)
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(isHovered ? Color.accentColor.opacity(0.1) : Color.primary.opacity(0.03))
@@ -2474,8 +3311,396 @@ private struct RoomTemplateCard: View {
     }
 }
 
+// MARK: - Cinema Light Picker
+private struct CinemaLightPicker: View {
+    @Binding var selectedLight: String
+    let onSelect: (String) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var searchText = ""
+
+    // Comprehensive list of modern cinema lights
+    private let lightCategories: [(name: String, lights: [String])] = [
+        ("ARRI SkyPanel", [
+            "ARRI SkyPanel S30-C",
+            "ARRI SkyPanel S60-C",
+            "ARRI SkyPanel S120-C",
+            "ARRI SkyPanel S360-C",
+            "ARRI SkyPanel X21",
+            "ARRI SkyPanel X22",
+            "ARRI SkyPanel X23"
+        ]),
+        ("ARRI Orbiter", [
+            "ARRI Orbiter",
+            "ARRI Orbiter Dome",
+            "ARRI Orbiter Fresnel",
+            "ARRI Orbiter Open Face"
+        ]),
+        ("ARRI Fresnels", [
+            "ARRI L5-C LED Fresnel",
+            "ARRI L7-C LED Fresnel",
+            "ARRI L10-C LED Fresnel",
+            "ARRI True Blue T1",
+            "ARRI True Blue T2",
+            "ARRI True Blue T5",
+            "ARRI True Blue T12",
+            "ARRI True Blue T24",
+            "ARRI M8 HMI",
+            "ARRI M18 HMI",
+            "ARRI M40 HMI",
+            "ARRI M90 HMI"
+        ]),
+        ("Aputure", [
+            "Aputure 120D II",
+            "Aputure 300D II",
+            "Aputure 300X",
+            "Aputure 600D Pro",
+            "Aputure 600X Pro",
+            "Aputure 1200D Pro",
+            "Aputure LS C120D",
+            "Aputure Nova P300c",
+            "Aputure Nova P600c",
+            "Aputure MC",
+            "Aputure MT Pro",
+            "Aputure Amaran 60D",
+            "Aputure Amaran 100D",
+            "Aputure Amaran 200D",
+            "Aputure Amaran 300C",
+            "Aputure F21C",
+            "Aputure F22C",
+            "Aputure Spotlight Mount"
+        ]),
+        ("Litepanels", [
+            "Litepanels Astra 1x1 Soft",
+            "Litepanels Astra 1x1 Bi-Color",
+            "Litepanels Astra 6X",
+            "Litepanels Gemini 1x1",
+            "Litepanels Gemini 1x1 Hard",
+            "Litepanels Gemini 2x1",
+            "Litepanels Gemini 2x1 Hard",
+            "Litepanels Sola 4+",
+            "Litepanels Sola 6+",
+            "Litepanels Sola 9",
+            "Litepanels Sola 12"
+        ]),
+        ("Kino Flo", [
+            "Kino Flo Celeb 200 DMX",
+            "Kino Flo Celeb 250 DMX",
+            "Kino Flo Celeb 450 DMX",
+            "Kino Flo Diva-Lite 20",
+            "Kino Flo Diva-Lite 30",
+            "Kino Flo FreeStyle 21",
+            "Kino Flo FreeStyle 31",
+            "Kino Flo FreeStyle 41",
+            "Kino Flo Select 20",
+            "Kino Flo Select 30",
+            "Kino Flo Image 20",
+            "Kino Flo Image 80",
+            "Kino Flo Tegra 4Bank",
+            "Kino Flo 4Bank 4ft",
+            "Kino Flo 4Bank 2ft"
+        ]),
+        ("ARRI HMI", [
+            "ARRI M8 HMI Fresnel",
+            "ARRI M18 HMI Fresnel",
+            "ARRI M40/25 HMI",
+            "ARRI M90 HMI Fresnel",
+            "ARRI Compact 125 HMI",
+            "ARRI Compact 200 HMI",
+            "ARRI Compact 575 HMI",
+            "ARRI Compact 1200 HMI",
+            "ARRI Compact 2500 HMI",
+            "ARRI Compact 4000 HMI",
+            "ARRI Compact 6000 HMI",
+            "ARRI SUN 12 Plus HMI",
+            "ARRI SUN 18 HMI",
+            "ARRI Arrimax 18/12 HMI"
+        ]),
+        ("Creamsource", [
+            "Creamsource Vortex8",
+            "Creamsource Vortex4",
+            "Creamsource Doppio",
+            "Creamsource Micro Color",
+            "Creamsource Mini+",
+            "Creamsource Sky"
+        ]),
+        ("Nanlite", [
+            "Nanlite Forza 60",
+            "Nanlite Forza 60B",
+            "Nanlite Forza 150",
+            "Nanlite Forza 200",
+            "Nanlite Forza 300",
+            "Nanlite Forza 300B",
+            "Nanlite Forza 500",
+            "Nanlite Forza 500B",
+            "Nanlite Forza 720",
+            "Nanlite Forza 720B",
+            "Nanlite PavoSlim 60C",
+            "Nanlite PavoSlim 120C",
+            "Nanlite MixPanel 60",
+            "Nanlite MixPanel 150",
+            "Nanlite PavoTube II 6C",
+            "Nanlite PavoTube II 15C",
+            "Nanlite PavoTube II 30C",
+            "Nanlite PavoTube II 60C"
+        ]),
+        ("Astera", [
+            "Astera Titan Tube",
+            "Astera Helios Tube",
+            "Astera HydraPanel",
+            "Astera PixelBrick",
+            "Astera AX1 PixelTube",
+            "Astera AX3 LightDrop",
+            "Astera AX5 TriplePAR",
+            "Astera AX10 SpotMax"
+        ]),
+        ("Quasar Science", [
+            "Quasar Science Rainbow 2",
+            "Quasar Science Rainbow 4",
+            "Quasar Science R2 2ft",
+            "Quasar Science R2 4ft",
+            "Quasar Science Double Rainbow",
+            "Quasar Science Ossium",
+            "Quasar Science Crossfade",
+            "Quasar Science Q-Lion"
+        ]),
+        ("Digital Sputnik", [
+            "Digital Sputnik DS1",
+            "Digital Sputnik DS3",
+            "Digital Sputnik DS6",
+            "Digital Sputnik Voyager",
+            "Digital Sputnik Modular System"
+        ]),
+        ("Rosco DMG", [
+            "Rosco DMG Lumiere SL1 Mix",
+            "Rosco DMG Lumiere Switch",
+            "Rosco DMG Lumiere Mini Mix",
+            "Rosco DMG Lumiere Maxi Mix",
+            "Rosco Silk 110",
+            "Rosco Silk 210",
+            "Rosco Silk 220"
+        ]),
+        ("Mole-Richardson", [
+            "Mole-Richardson Baby Junior 1K",
+            "Mole-Richardson Baby 2K",
+            "Mole-Richardson Junior 2K",
+            "Mole-Richardson Senior 5K",
+            "Mole-Richardson Tener 10K",
+            "Mole-Richardson Big Eye 10K",
+            "Mole-Richardson 20K",
+            "Mole-Richardson Par 64",
+            "Mole-Richardson Mighty Mole",
+            "Mole-Richardson Tweenie",
+            "Mole-Richardson Inkie"
+        ]),
+        ("Tungsten/Incandescent", [
+            "100W Practical",
+            "250W Practical",
+            "500W Tungsten",
+            "650W Tungsten Fresnel",
+            "1K Tungsten Fresnel",
+            "2K Tungsten Fresnel",
+            "5K Tungsten Fresnel",
+            "10K Tungsten Fresnel",
+            "20K Tungsten",
+            "ARRI 650W Plus",
+            "ARRI 300W Plus",
+            "Dedolight 150W",
+            "Dedolight 300W"
+        ]),
+        ("Practicals & LEDs", [
+            "China Ball 12\"",
+            "China Ball 18\"",
+            "China Ball 24\"",
+            "LED Panel 1x1",
+            "LED Panel 2x1",
+            "Flex LED Mat 1x1",
+            "Flex LED Mat 2x2",
+            "Flex LED Mat 4x4",
+            "LiteGear LiteMat 1",
+            "LiteGear LiteMat 2",
+            "LiteGear LiteMat 4",
+            "LiteGear LiteMat 8",
+            "LiteGear LiteTile"
+        ]),
+        ("RGB/Effects", [
+            "SkyPanel S60-C (RGB Mode)",
+            "Astera Titan (Effects Mode)",
+            "Aputure MC (RGB Mode)",
+            "Chroma-Q Space Force",
+            "Chroma-Q Color Force II",
+            "Martin MAC Encore",
+            "Robe BMFL",
+            "ETC Source Four LED",
+            "ETC ColorSource Par",
+            "ADJ Mega HEX Par"
+        ]),
+        ("Specialty/Modifiers", [
+            "Space Light",
+            "Soft Box 2x3",
+            "Soft Box 4x4",
+            "Chimera Small",
+            "Chimera Medium",
+            "Chimera Large",
+            "Octa 3ft",
+            "Octa 5ft",
+            "Octa 7ft",
+            "Lantern Ball",
+            "Book Light (2x 4x4)",
+            "Butterfly 6x6",
+            "Butterfly 8x8",
+            "Butterfly 12x12",
+            "Butterfly 20x20",
+            "Bounce 4x4",
+            "Bounce 8x8",
+            "Bounce 12x12",
+            "Neg Fill 4x4",
+            "Neg Fill 8x8",
+            "Neg Fill 12x12"
+        ])
+    ]
+
+    private var filteredCategories: [(name: String, lights: [String])] {
+        if searchText.isEmpty {
+            return lightCategories
+        }
+        return lightCategories.compactMap { category in
+            let filteredLights = category.lights.filter {
+                $0.localizedCaseInsensitiveContains(searchText)
+            }
+            return filteredLights.isEmpty ? nil : (category.name, filteredLights)
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("Select Cinema Light")
+                    .font(.system(size: 16, weight: .semibold))
+                Spacer()
+                Button("Cancel") { dismiss() }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.secondary)
+            }
+            .padding()
+            .background(Color.primary.opacity(0.03))
+
+            // Search bar
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+                TextField("Search lights...", text: $searchText)
+                    .textFieldStyle(.plain)
+                if !searchText.isEmpty {
+                    Button(action: { searchText = "" }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(10)
+            .background(Color.primary.opacity(0.05))
+            .cornerRadius(8)
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+
+            // Light list
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 16) {
+                    ForEach(filteredCategories, id: \.name) { category in
+                        VStack(alignment: .leading, spacing: 8) {
+                            // Category header
+                            Text(category.name)
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundStyle(.primary)
+                                .padding(.horizontal, 4)
+
+                            // Lights in category
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 180, maximum: 250), spacing: 8)], spacing: 8) {
+                                ForEach(category.lights, id: \.self) { light in
+                                    LightOptionCard(
+                                        name: light,
+                                        isSelected: selectedLight == light
+                                    ) {
+                                        onSelect(light)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding()
+            }
+        }
+        .frame(width: 700, height: 600)
+    }
+}
+
+private struct LightOptionCard: View {
+    let name: String
+    let isSelected: Bool
+    let onSelect: () -> Void
+
+    @State private var isHovered = false
+
+    private var lightIcon: String {
+        if name.contains("Fresnel") || name.contains("HMI") {
+            return "light.max"
+        } else if name.contains("Panel") || name.contains("SkyPanel") || name.contains("Gemini") || name.contains("Astra") {
+            return "rectangle.inset.filled"
+        } else if name.contains("Tube") || name.contains("Kino") || name.contains("Quasar") {
+            return "line.diagonal"
+        } else if name.contains("Ball") || name.contains("Lantern") || name.contains("Octa") {
+            return "circle"
+        } else if name.contains("Bounce") || name.contains("Butterfly") || name.contains("Soft") {
+            return "square"
+        } else if name.contains("Neg") {
+            return "square.fill"
+        } else {
+            return "lightbulb.fill"
+        }
+    }
+
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(spacing: 10) {
+                Image(systemName: lightIcon)
+                    .font(.system(size: 14))
+                    .foregroundColor(.yellow)
+                    .frame(width: 24)
+
+                Text(name)
+                    .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+
+                Spacer()
+
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.accentColor)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(isSelected ? Color.accentColor.opacity(0.15) : (isHovered ? Color.primary.opacity(0.06) : Color.primary.opacity(0.03)))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 6)
+                    .strokeBorder(isSelected ? Color.accentColor : (isHovered ? Color.primary.opacity(0.15) : Color.clear), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
+    }
+}
+
 // MARK: - Preview
 #Preview {
-    TopDownShotPlanner(selectedScene: nil)
+    TopDownShotPlanner(selectedScene: nil, selectedCamera: "ARRI Alexa Mini")
         .frame(width: 1000, height: 700)
 }

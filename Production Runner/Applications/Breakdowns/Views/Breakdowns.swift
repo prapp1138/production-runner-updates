@@ -226,25 +226,24 @@ struct Breakdowns: View {
         print("🔷 [Breakdowns] StripStore project UUID: \(project.id?.uuidString ?? "nil")")
         _stripStore = StateObject(wrappedValue: StripStore(context: ctx, project: project))
 
+        // Note: locationsFetch is kept for potential future use but set to fetch nothing
+        // to avoid performance issues. Locations are fetched on-demand via getLinkedLocation().
         if let entity = NSEntityDescription.entity(forEntityName: "LocationEntity", in: ctx) {
-            // Optimized locations fetch
             let locationsRequest = NSFetchRequest<NSManagedObject>()
             locationsRequest.entity = entity
-            locationsRequest.sortDescriptors = [
-                NSSortDescriptor(key: "name", ascending: true),
-                NSSortDescriptor(key: "title", ascending: true)
-            ]
-            locationsRequest.fetchBatchSize = 20
-            locationsRequest.returnsObjectsAsFaults = true
-
-            _locationsFetch = FetchRequest(fetchRequest: locationsRequest, animation: .default)
-        } else {
-            let fallback = NSEntityDescription.entity(forEntityName: "SceneEntity", in: ctx)!
+            locationsRequest.sortDescriptors = []
+            locationsRequest.predicate = NSPredicate(value: false) // Don't fetch - unused
+            _locationsFetch = FetchRequest(fetchRequest: locationsRequest, animation: nil)
+        } else if let fallback = NSEntityDescription.entity(forEntityName: "SceneEntity", in: ctx) {
             _locationsFetch = FetchRequest(
                 entity: fallback,
                 sortDescriptors: [],
                 predicate: NSPredicate(value: false)
             )
+        } else {
+            let emptyRequest = NSFetchRequest<NSManagedObject>(entityName: "SceneEntity")
+            emptyRequest.predicate = NSPredicate(value: false)
+            _locationsFetch = FetchRequest(fetchRequest: emptyRequest, animation: nil)
         }
     }
     
@@ -1007,6 +1006,85 @@ struct Breakdowns: View {
     // MARK: - Sidebar View (Modern Design)
     private var sidebarView: some View {
         VStack(spacing: 0) {
+            // Scene Actions Toolbar
+            HStack(spacing: 8) {
+                Text("Scenes")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.primary)
+
+                Text("\(filteredScenes.count)")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.primary.opacity(0.08))
+                    .cornerRadius(4)
+
+                Spacer()
+
+                // Action buttons
+                HStack(spacing: 4) {
+                    Button {
+                        performNewScene()
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.green)
+                            .frame(width: 24, height: 24)
+                            .background(
+                                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                    .fill(Color.green.opacity(0.1))
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .customTooltip("Add Scene")
+
+                    Button {
+                        performDuplicate()
+                    } label: {
+                        Image(systemName: "doc.on.doc")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(selectedScene == nil ? Color.secondary.opacity(0.5) : Color.blue)
+                            .frame(width: 24, height: 24)
+                            .background(
+                                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                    .fill(selectedScene == nil ? Color.secondary.opacity(0.05) : Color.blue.opacity(0.1))
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(selectedScene == nil)
+                    .customTooltip("Copy Scene")
+
+                    Button {
+                        #if os(macOS)
+                        let targets = !selectedSceneIDs.isEmpty ? Array(selectedSceneIDs) : (selectedSceneID.map { [$0] } ?? [])
+                        if !targets.isEmpty { confirmDelete(ids: targets) }
+                        #else
+                        if let target = selectedScene {
+                            confirmDelete(ids: [target.objectID])
+                        }
+                        #endif
+                    } label: {
+                        Image(systemName: "trash")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(selectedScene == nil ? Color.secondary.opacity(0.5) : Color.red)
+                            .frame(width: 24, height: 24)
+                            .background(
+                                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                    .fill(selectedScene == nil ? Color.secondary.opacity(0.05) : Color.red.opacity(0.1))
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(selectedScene == nil)
+                    .customTooltip("Delete Scene")
+                }
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 40)
+            .background(Color.primary.opacity(0.015))
+
+            Divider()
+
             // Selection count indicator (shown when multiple selected)
             #if os(macOS)
             if selectedSceneIDs.count > 1 {
@@ -1577,7 +1655,52 @@ struct Breakdowns: View {
 
     // MARK: - Right FDX Preview Pane
     private var rightFDXPreviewPane: some View {
-        GeometryReader { geometry in
+        VStack(spacing: 0) {
+            // Script Preview Toolbar (Highlight Element + Sync to iPad)
+            HStack(spacing: 12) {
+                // Highlight Element Button (only when scene selected)
+                if let scene = selectedScene {
+                    HighlightToolbar(sceneID: scene.objectID.uriRepresentation().absoluteString)
+                } else {
+                    Text("Select a scene to highlight elements")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                // iPad Sync Button
+                Button {
+                    syncBreakdownsToiPad()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: syncingToiPad ? "arrow.triangle.2.circlepath" : "ipad.and.arrow.forward")
+                            .font(.system(size: 12, weight: .medium))
+                        Text(syncingToiPad ? "Syncing..." : "Sync to iPad")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .foregroundStyle(.blue)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(Color.blue.opacity(0.08))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .strokeBorder(Color.blue.opacity(0.2), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+                .customTooltip("Sync script to iPad")
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 40)
+            .background(Color.primary.opacity(0.015))
+
+            Divider()
+
+            GeometryReader { geometry in
                 ScrollView {
                     VStack(alignment: .center, spacing: BreakdownsDesign.spacing) {
 
@@ -1796,17 +1919,13 @@ struct Breakdowns: View {
                     .padding(.bottom, BreakdownsDesign.spacing)
                 } // Close ScrollView
             } // Close GeometryReader
+        } // Close VStack (toolbar + content)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Script Breakdown Content (Original Breakdowns view content)
     private var scriptBreakdownContent: some View {
         VStack(spacing: 0) {
-            // Script Preview Sub-toolbar (Highlight tools + iPad sync)
-            scriptPreviewToolbar
-
-            Divider()
-
             // Main Content - Using HStack with flexible frames for better performance
             HStack(spacing: 0) {
                 // Left Sidebar with Scenes and Breakdown Dropdown
@@ -1828,50 +1947,6 @@ struct Breakdowns: View {
             // Bottom Toolbar
             bottomToolbar
         }
-    }
-
-    // MARK: - Script Preview Sub-toolbar
-    private var scriptPreviewToolbar: some View {
-        HStack(spacing: 12) {
-            // Highlight Element Button (only when scene selected)
-            if let scene = selectedScene {
-                HighlightToolbar(sceneID: scene.objectID.uriRepresentation().absoluteString)
-            } else {
-                Text("Select a scene to highlight elements")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            // iPad Sync Button
-            Button {
-                syncBreakdownsToiPad()
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: syncingToiPad ? "arrow.triangle.2.circlepath" : "ipad.and.arrow.forward")
-                        .font(.system(size: 12, weight: .medium))
-                    Text(syncingToiPad ? "Syncing..." : "Sync to iPad")
-                        .font(.system(size: 12, weight: .medium))
-                }
-                .foregroundStyle(.blue)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(Color.blue.opacity(0.08))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .strokeBorder(Color.blue.opacity(0.2), lineWidth: 1)
-                )
-            }
-            .buttonStyle(.plain)
-            .customTooltip("Sync script to iPad")
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(Color.primary.opacity(0.015))
     }
 
     // MARK: - Unified Toolbar (Combined Department Tabs + Scene Actions)
@@ -1919,26 +1994,9 @@ struct Breakdowns: View {
                 .frame(height: 28)
                 .padding(.horizontal, 12)
 
-            // Center: Version & Scenes (only for Script department)
+            // Center: Version dropdown (only for Script department)
             if selectedDepartment == .script {
                 breakdownVersionDropdown
-
-                Divider()
-                    .frame(height: 28)
-                    .padding(.horizontal, 8)
-
-                Text("Scenes")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.secondary)
-
-                Text("\(filteredScenes.count)")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Color.primary.opacity(0.08))
-                    .cornerRadius(4)
-                    .padding(.leading, 4)
             }
 
             Spacer()
@@ -2069,34 +2127,6 @@ struct Breakdowns: View {
                 }
                 .buttonStyle(.plain)
                 .customTooltip("Export Breakdowns")
-
-                Divider()
-                    .frame(height: 20)
-                    .padding(.horizontal, 4)
-
-                PremiumButton(icon: "plus", style: .green) {
-                    performNewScene()
-                }
-                .customTooltip("New Scene")
-
-                PremiumButton(icon: "doc.on.doc", style: .blue) {
-                    performDuplicate()
-                }
-                .disabled(selectedScene == nil)
-                .customTooltip("Duplicate Scene")
-
-                PremiumButton(icon: "trash", style: .destructive) {
-                    #if os(macOS)
-                    let targets = !selectedSceneIDs.isEmpty ? Array(selectedSceneIDs) : (selectedSceneID.map { [$0] } ?? [])
-                    if !targets.isEmpty { confirmDelete(ids: targets) }
-                    #else
-                    if let target = selectedScene {
-                        confirmDelete(ids: [target.objectID])
-                    }
-                    #endif
-                }
-                .disabled(selectedScene == nil)
-                .customTooltip("Delete Scene")
             }
             .padding(.trailing, 12)
         }
@@ -3246,42 +3276,48 @@ struct Breakdowns: View {
         }
     }
 
+    @ViewBuilder
     private func linkedLocationRow(_ linkedLocation: NSManagedObject) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "mappin.circle.fill")
-                .font(.system(size: 14))
-                .foregroundStyle(.blue)
+        // Guard against deleted or invalid Core Data objects to prevent EXC_BAD_ACCESS
+        if linkedLocation.isDeleted || linkedLocation.managedObjectContext == nil {
+            EmptyView()
+        } else {
+            HStack(spacing: 8) {
+                Image(systemName: "mappin.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.blue)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(linkedLocation.value(forKey: "name") as? String ?? "Unknown Location")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.primary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(linkedLocation.value(forKey: "name") as? String ?? "Unknown Location")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.primary)
 
-                if let address = linkedLocation.value(forKey: "address") as? String, !address.isEmpty {
-                    Text(address)
-                        .font(.system(size: 12))
+                    if let address = linkedLocation.value(forKey: "address") as? String, !address.isEmpty {
+                        Text(address)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                Button(action: { unlinkLocation() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 16))
                         .foregroundStyle(.secondary)
                 }
+                .buttonStyle(.plain)
             }
-
-            Spacer()
-
-            Button(action: { unlinkLocation() }) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 16))
-                    .foregroundStyle(.secondary)
-            }
-            .buttonStyle(.plain)
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.blue.opacity(0.1))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .strokeBorder(Color.blue.opacity(0.4), lineWidth: 1.5)
+            )
         }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color.blue.opacity(0.1))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(Color.blue.opacity(0.4), lineWidth: 1.5)
-        )
     }
 
     private var linkLocationButton: some View {
@@ -4642,7 +4678,13 @@ struct Breakdowns: View {
 
         do {
             let results = try context.fetch(fetchRequest)
-            return results.first
+            // Validate the fetched object is not deleted and has valid context
+            if let location = results.first,
+               !location.isDeleted,
+               location.managedObjectContext != nil {
+                return location
+            }
+            return nil
         } catch {
             print("Error fetching linked location: \(error)")
             return nil

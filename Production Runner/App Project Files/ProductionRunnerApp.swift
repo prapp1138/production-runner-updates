@@ -3,11 +3,12 @@ import FirebaseCore
 import CoreData
 import UniformTypeIdentifiers
 import Combine
-import Sentry
 
 // MARK: - Sentry Configuration
 // Set to true to enable Sentry crash reporting and analytics
-private let SENTRY_ENABLED = false
+// To use: Add Sentry package, then uncomment 'import Sentry' below
+// import Sentry
+private let SENTRY_ENABLED = false  // Set to true after Sentry package is working
 #if os(macOS)
 import AppKit
 import Sparkle
@@ -30,20 +31,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Initialize Sentry if enabled
+        // Uncomment when Sentry package is properly linked:
+        /*
         if SENTRY_ENABLED {
             SentrySDK.start { options in
                 options.dsn = "https://a8a3f81c7f35efd2b568926e196f73c8@o4510652841197568.ingest.us.sentry.io/4510652906012672"
                 options.debug = false
                 options.tracesSampleRate = 1.0
-                options.enableCrashHandler = true
-                options.enableAutoSessionTracking = true
-                options.sessionTrackingIntervalMillis = 30000
-                options.enableAutoPerformanceTracing = true
-                options.enableUserInteractionTracing = true
-                options.enablePreWarmedAppStartTracing = true
                 options.attachStacktrace = true
 
-                // Set release version
                 let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
                 let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
                 options.releaseName = "production-runner@\(version)+\(build)"
@@ -56,6 +52,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             print("📊 Sentry configured (macOS)")
         }
+        */
 
         FirebaseApp.configure()
         print("🔥 Firebase configured (macOS)")
@@ -91,20 +88,15 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         // Initialize Sentry if enabled
+        // Uncomment when Sentry package is properly linked:
+        /*
         if SENTRY_ENABLED {
             SentrySDK.start { options in
                 options.dsn = "https://a8a3f81c7f35efd2b568926e196f73c8@o4510652841197568.ingest.us.sentry.io/4510652906012672"
                 options.debug = false
                 options.tracesSampleRate = 1.0
-                options.enableCrashHandler = true
-                options.enableAutoSessionTracking = true
-                options.sessionTrackingIntervalMillis = 30000
-                options.enableAutoPerformanceTracing = true
-                options.enableUserInteractionTracing = true
-                options.enablePreWarmedAppStartTracing = true
                 options.attachStacktrace = true
 
-                // Set release version
                 let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
                 let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
                 options.releaseName = "production-runner@\(version)+\(build)"
@@ -117,6 +109,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             }
             print("📊 Sentry configured (iOS)")
         }
+        */
 
         FirebaseApp.configure()
         print("🔥 Firebase configured (iOS)")
@@ -277,6 +270,10 @@ struct ProductionRunnerApp: App {
     @AppStorage("app_custom_accent_enabled") private var customAccentEnabled: Bool = false
     @AppStorage("app_custom_accent_color") private var customAccentHex: String = ""
 
+    // What's New version tracking
+    @AppStorage("lastSeenVersion") private var lastSeenVersion: String = ""
+    @State private var hasCheckedForWhatsNew = false
+
     private var colorScheme: ColorScheme? {
         switch appAppearance {
         case "light": return .light
@@ -304,6 +301,31 @@ struct ProductionRunnerApp: App {
         AppAppearance.applyTheme(appTheme)
     }
 
+    /// Check if we should show What's New (version changed since last seen)
+    private func checkAndShowWhatsNew() {
+        guard !hasCheckedForWhatsNew else { return }
+        hasCheckedForWhatsNew = true
+
+        let currentVersion = VersionHistory.currentVersion
+
+        // Show What's New if:
+        // 1. User has seen a previous version (not first launch)
+        // 2. Current version is different from last seen
+        if !lastSeenVersion.isEmpty && lastSeenVersion != currentVersion {
+            print("📢 New version detected: \(lastSeenVersion) → \(currentVersion)")
+            #if os(macOS)
+            // Small delay to let the main window appear first
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                openWindow(id: "whatsnew")
+            }
+            #endif
+        } else if lastSeenVersion.isEmpty {
+            // First launch - set the version without showing What's New
+            lastSeenVersion = currentVersion
+            print("📢 First launch - setting version to \(currentVersion)")
+        }
+    }
+
     // MARK: - Main Content View with Modifiers
     private var mainContentView: some View {
         contentWithEnvironment
@@ -327,7 +349,10 @@ struct ProductionRunnerApp: App {
             .environmentObject(projectFileStore)
             .environmentObject(recents)
             .tint(currentThemeAccentColor)
-            .onAppear { autosaveEvery(10, context: persistence.viewContext) }
+            .onAppear {
+                autosaveEvery(10, context: persistence.viewContext)
+                checkAndShowWhatsNew()
+            }
     }
 
     private var contentWithWindowHandlers: some View {

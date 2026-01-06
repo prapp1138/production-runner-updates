@@ -365,20 +365,14 @@ struct MainDashboardView: View {
         do { return try moc.count(for: req) } catch { return 0 }
     }
     private func locationsBreakdown() -> (total: Int, toScout: Int, scouted: Int) {
-        // Flexible: supports either Bool 'scouted' or String 'status' with values like "to_scout"/"scouted"
         guard hasEntity("LocationEntity") else { return (0, 0, 0) }
         let total = entityCount("LocationEntity")
         var toScout = 0
         var scouted = 0
-        // Try Bool 'scouted'
+        // Use Bool 'scouted' field from Core Data model
         if hasEntity("LocationEntity") {
             toScout = entityCount("LocationEntity", predicate: NSPredicate(format: "scouted == NO"))
             scouted = entityCount("LocationEntity", predicate: NSPredicate(format: "scouted == YES"))
-            // If both are zero, try 'status' string fallback
-            if toScout == 0 && scouted == 0 {
-                toScout = entityCount("LocationEntity", predicate: NSPredicate(format: "status == %@", "to_scout"))
-                scouted = entityCount("LocationEntity", predicate: NSPredicate(format: "status == %@", "scouted"))
-            }
         }
         return (total, toScout, scouted)
     }
@@ -2096,7 +2090,7 @@ struct MainDashboardView: View {
             // Main content area - show settings or app selection
             if showProjectSettings {
                 ProjectSettingsFullView(project: project, onBack: { showProjectSettings = false })
-                    .frame(minWidth: 400, maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(minWidth: 400, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             } else {
                 selectionView()
                     .frame(minWidth: 400, maxWidth: .infinity, maxHeight: .infinity)
