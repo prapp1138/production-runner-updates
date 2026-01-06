@@ -7,7 +7,7 @@
     <language>en</language>
     <item>
       <title>Version 0.02</title>
-      <sparkle:version>0.02</sparkle:version>
+      <sparkle:version>Alpha</sparkle:version>
       <sparkle:shortVersionString>0.02</sparkle:shortVersionString>
       <pubDate>Mon, 06 Jan 2026 17:22:54 +0000</pubDate>
       <description><![CDATA[
@@ -22,7 +22,7 @@
       ]]></description>
       <enclosure
         url="https://github.com/prapp1138/production-runner-updates/releases/download/v0.02/Production_Runner_0.02.zip"
-        sparkle:version="0.02"
+        sparkle:version="Alpha"
         sparkle:shortVersionString="0.02"
         type="application/octet-stream"
         length="24931147"
