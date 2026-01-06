@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Production Runner Updates</title>
+    <link>https://github.com/prapp1138/production-runner-updates</link>
+    <description>Updates for Production Runner</description>
+    <language>en</language>
+    <item>
+      <title>Version 0.02</title>
+      <sparkle:version>0.02</sparkle:version>
+      <sparkle:shortVersionString>0.02</sparkle:shortVersionString>
+      <pubDate>Mon, 06 Jan 2026 17:22:54 +0000</pubDate>
+      <description><![CDATA[
+        <h2>Production Runner v0.02</h2>
+        <ul>
+          <li>Enhanced Breakdowns views</li>
+          <li>Shot List improvements</li>
+          <li>Location service updates</li>
+          <li>Dashboard enhancements</li>
+          <li>Data model updates</li>
+        </ul>
+      ]]></description>
+      <enclosure
+        url="https://github.com/prapp1138/production-runner-updates/releases/download/v0.02/Production_Runner_0.02.zip"
+        sparkle:version="0.02"
+        sparkle:shortVersionString="0.02"
+        type="application/octet-stream"
+        length="25005953"
+      />
+      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+    </item>
+  </channel>
+</rss>
